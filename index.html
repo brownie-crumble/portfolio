@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Pujitha Padmanabha — Portfolio</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;700;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
@@ -23,23 +23,26 @@
   --text:    #c0d8f0;
   --muted:   #5a7a99;
   --bright:  #e8f4ff;
-  --grid:    rgba(0,229,184,0.04);
-  --gridln:  rgba(0,229,184,0.09);
+  --grid:    rgba(0,229,184,0.03);
+  --gridln:  rgba(0,229,184,0.07);
   --tb-h:    46px;
   --font-mono: 'Share Tech Mono', monospace;
   --font-hd:   'Orbitron', sans-serif;
   --font-code: 'Space Mono', monospace;
   --glow: 0 0 14px rgba(0,229,184,0.35);
   --glow2: 0 0 14px rgba(240,165,0,0.35);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;min-height:100%;overflow:auto;}
-
+html{width:100%;height:100%;}
 body{
   background:var(--desk);
   font-family:var(--font-mono);
-  user-select:none;
   cursor:crosshair;
+  width:100%;
+  min-height:100%;
+  overflow:hidden;
   background-image:
     linear-gradient(var(--grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid) 1px, transparent 1px),
@@ -47,78 +50,135 @@ body{
     linear-gradient(90deg, var(--gridln) 1px, transparent 1px);
   background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
 }
-
 /* Scanlines */
 body::after{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
-  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px);
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9990;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);
 }
 
-/* IC die corners */
-.window::before,.window::after{
-  content:'';position:absolute;
-  width:16px;height:16px;
-  border-color:var(--accent);border-style:solid;z-index:2;
-  transition:border-color 0.3s;
+/* ═══════════════════════
+   BOOT SEQUENCE
+═══════════════════════ */
+#boot{
+  position:fixed;inset:0;background:var(--bg);z-index:99999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:18px;transition:opacity 0.6s var(--ease);
 }
-.window::before{top:-1px;left:-1px;border-width:2px 0 0 2px;}
-.window::after{ bottom:-1px;right:-1px;border-width:0 2px 2px 0;}
-.window.focused::before,.window.focused::after{border-color:var(--accent);filter:drop-shadow(0 0 3px var(--accent));}
-.window.inactive::before,.window.inactive::after{border-color:var(--dim);}
+#boot.fade-out{opacity:0;pointer-events:none;}
+#boot.hidden{display:none;}
+.boot-logo{
+  font-family:var(--font-hd);font-size:1.4rem;color:var(--accent);
+  letter-spacing:0.25em;text-transform:uppercase;
+  text-shadow:0 0 30px rgba(0,229,184,0.6);
+  animation:boot-pulse 1s ease-in-out infinite alternate;
+}
+@keyframes boot-pulse{from{opacity:0.7;}to{opacity:1;}}
+.boot-line{
+  font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);
+  letter-spacing:0.12em;text-transform:uppercase;
+  opacity:0;animation:fade-in 0.3s ease forwards;
+}
+.boot-bar-wrap{width:280px;height:4px;background:var(--dimmer);border:1px solid var(--dim);overflow:hidden;}
+.boot-bar{height:100%;width:0;background:var(--accent);transition:width 1.6s var(--ease);
+  box-shadow:0 0 8px var(--accent);}
+@keyframes fade-in{to{opacity:1;}}
 
-/* IC bond-pad dots on corners */
-.window .pad-tl,.window .pad-tr,.window .pad-bl,.window .pad-br{
-  position:absolute;width:6px;height:6px;
-  background:var(--dim);border:1px solid var(--dimmer);z-index:3;
-  transition:background 0.3s;
+/* ═══════════════════════
+   MOUSE GLOW
+═══════════════════════ */
+#mouse-glow{
+  position:fixed;pointer-events:none;z-index:9;
+  width:300px;height:300px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(0,229,184,0.04) 0%, transparent 70%);
+  transform:translate(-50%,-50%);
+  transition:transform 0.1s linear;
 }
-.window.focused .pad-tl,.window.focused .pad-tr,.window.focused .pad-bl,.window.focused .pad-br{
-  background:var(--accent);box-shadow:var(--glow);
-}
-.window .pad-tl{top:3px;left:3px;}
-.window .pad-tr{top:3px;right:3px;}
-.window .pad-bl{bottom:3px;left:3px;}
-.window .pad-br{bottom:3px;right:3px;}
 
-/* ════════════════════════
-   DESKTOP
-════════════════════════ */
+/* ═══════════════════════
+   DESKTOP DECORATIONS
+═══════════════════════ */
 #desktop{
-  position:relative;
-  min-height:calc(100vh - var(--tb-h));
-  overflow:hidden;
+  position:fixed;inset:0;bottom:var(--tb-h);overflow:hidden;
 }
-#desktop::before{
-  content:'';position:absolute;inset:0;pointer-events:none;
-  background:
-    radial-gradient(ellipse 700px 500px at 15% 85%, rgba(0,229,184,0.035) 0%,transparent 70%),
-    radial-gradient(ellipse 600px 400px at 85% 10%, rgba(79,158,255,0.04) 0%,transparent 70%),
-    radial-gradient(ellipse 400px 300px at 50% 50%, rgba(176,96,255,0.02) 0%,transparent 70%);
+#desktop-bg{
+  position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden;
 }
+.ambient-light{
+  position:absolute;pointer-events:none;border-radius:50%;filter:blur(60px);
+  animation:ambient-drift 12s ease-in-out infinite alternate;
+}
+@keyframes ambient-drift{
+  from{transform:translate(0,0);}
+  to{transform:translate(20px,-15px);}
+}
+.hex-float{
+  position:absolute;font-family:var(--font-mono);font-size:8px;
+  color:rgba(0,229,184,0.12);letter-spacing:0.1em;pointer-events:none;
+  animation:hex-drift linear infinite;
+  white-space:nowrap;
+}
+@keyframes hex-drift{
+  from{transform:translateY(0);opacity:0.08;}
+  50%{opacity:0.18;}
+  to{transform:translateY(-60px);opacity:0;}
+}
+/* Decorative circuit traces */
+.trace-canvas{position:absolute;inset:0;pointer-events:none;}
 
-/* Trace lines decoration */
-#desktop .trace-h,.desktop .trace-v{position:absolute;pointer-events:none;opacity:0.12;}
+/* Desktop widgets */
+.desktop-widget{
+  position:absolute;pointer-events:none;z-index:2;
+  font-family:var(--font-mono);
+}
+#widget-sysmon{
+  bottom:10px;right:14px;
+  width:190px;
+  background:rgba(7,11,16,0.82);
+  border:1px solid var(--dim);
+  padding:8px 10px;
+  backdrop-filter:blur(4px);
+}
+.wdg-title{font-size:7.5px;color:var(--accent2);text-transform:uppercase;letter-spacing:0.14em;margin-bottom:6px;
+  display:flex;align-items:center;gap:5px;}
+.wdg-title::before{content:'';display:inline-block;width:5px;height:5px;background:var(--accent2);border-radius:50%;
+  box-shadow:0 0 5px var(--accent2);}
+.wdg-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.wdg-label{font-size:7px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;}
+.wdg-val{font-size:7.5px;color:var(--accent);letter-spacing:0.06em;}
+.wdg-bar{height:3px;background:var(--dimmer);margin-top:2px;overflow:hidden;}
+.wdg-fill{height:100%;background:var(--accent);transition:width 2s var(--ease);}
+.wdg-fill.orange{background:var(--accent2);}
+.wdg-fill.blue{background:var(--accent3);}
+
+#widget-coords{
+  bottom:10px;left:82px;
+  font-size:7.5px;color:rgba(0,229,184,0.2);
+  letter-spacing:0.12em;pointer-events:none;
+}
 
 /* Left sidebar icons */
 .desktop-icons{
   position:absolute;top:14px;left:10px;
   display:flex;flex-direction:column;gap:2px;z-index:10;
+  pointer-events:all;
 }
 .d-icon{
   display:flex;flex-direction:column;align-items:center;
   width:62px;padding:6px 3px;gap:3px;
   cursor:pointer;border:1px solid transparent;
-  transition:all 0.18s;position:relative;
+  transition:all 0.2s var(--ease);position:relative;user-select:none;
 }
 .d-icon::after{
   content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);
   width:0;height:1px;background:var(--accent);
-  transition:width 0.2s;
+  transition:width 0.25s var(--ease);
 }
 .d-icon:hover::after{width:80%;}
 .d-icon:hover{
   border-color:rgba(0,229,184,0.3);
   background:rgba(0,229,184,0.06);
+  transform:translateX(2px);
 }
 .d-icon.active-icon{
   border-color:rgba(0,229,184,0.5);
@@ -128,74 +188,86 @@ body::after{
 .d-icon .icon-label{
   font-family:var(--font-mono);font-size:8px;color:var(--accent);
   text-align:center;line-height:1.3;text-transform:uppercase;
-  letter-spacing:0.05em;
-  transition:text-shadow 0.2s;
+  letter-spacing:0.05em;transition:text-shadow 0.2s;
 }
 .d-icon:hover .icon-label{text-shadow:var(--glow);}
 
-/* ════════════════════════
-   WINDOWS
-════════════════════════ */
+/* ═══════════════════════
+   WINDOW CHROME
+═══════════════════════ */
 .window{
   position:absolute;
   background:var(--chrome);
   min-width:280px;min-height:100px;
   display:flex;flex-direction:column;
   border:1px solid var(--dim);
-  box-shadow:0 0 0 1px var(--dimmer),0 6px 32px rgba(0,0,0,0.75),inset 0 1px 0 rgba(255,255,255,0.03);
-  transition:box-shadow 0.25s,border-color 0.25s;
+  box-shadow:0 0 0 1px var(--dimmer),0 6px 32px rgba(0,0,0,0.75),inset 0 1px 0 rgba(255,255,255,0.02);
+  transition:box-shadow 0.3s var(--ease), border-color 0.3s var(--ease), opacity 0.25s var(--ease);
+  will-change:transform;
 }
 .window.focused{
   border-color:rgba(0,229,184,0.5);
-  box-shadow:0 0 0 1px var(--dimmer),0 0 30px rgba(0,229,184,0.12),0 8px 40px rgba(0,0,0,0.85),inset 0 1px 0 rgba(0,229,184,0.06);
+  box-shadow:0 0 0 1px var(--dimmer),0 0 40px rgba(0,229,184,0.1),0 12px 50px rgba(0,0,0,0.9),inset 0 1px 0 rgba(0,229,184,0.05);
   z-index:100;
 }
 .window.minimized{display:none!important;}
 
+/* IC corners */
+.window::before,.window::after{
+  content:'';position:absolute;width:16px;height:16px;
+  border-color:var(--accent);border-style:solid;z-index:2;
+  transition:border-color 0.3s, filter 0.3s;
+}
+.window::before{top:-1px;left:-1px;border-width:2px 0 0 2px;}
+.window::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0;}
+.window.focused::before,.window.focused::after{filter:drop-shadow(0 0 3px var(--accent));}
+.window.inactive::before,.window.inactive::after{border-color:var(--dim);}
+
+.window .pad-tl,.window .pad-tr,.window .pad-bl,.window .pad-br{
+  position:absolute;width:6px;height:6px;
+  background:var(--dim);border:1px solid var(--dimmer);z-index:3;
+  transition:background 0.3s, box-shadow 0.3s;
+}
+.window.focused .pad-tl,.window.focused .pad-tr,.window.focused .pad-bl,.window.focused .pad-br{
+  background:var(--accent);box-shadow:var(--glow);
+}
+.window .pad-tl{top:3px;left:3px;}
+.window .pad-tr{top:3px;right:3px;}
+.window .pad-bl{bottom:3px;left:3px;}
+.window .pad-br{bottom:3px;right:3px;}
+
 /* Title bar */
 .title-bar{
-  background:var(--panel);
-  border-bottom:1px solid var(--dim);
-  display:flex;align-items:center;
-  padding:0 6px 0 0;gap:6px;
-  flex-shrink:0;cursor:move;
-  position:relative;overflow:hidden;
-  height:30px;
+  background:var(--panel);border-bottom:1px solid var(--dim);
+  display:flex;align-items:center;padding:0 6px 0 0;gap:6px;
+  flex-shrink:0;cursor:move;position:relative;overflow:hidden;height:30px;
 }
-/* Left accent strip with IC pin look */
 .title-bar::before{
   content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
   background:linear-gradient(to bottom,var(--accent),rgba(0,229,184,0.3));
-  box-shadow:0 0 8px var(--accent);
-  transition:all 0.3s;
+  box-shadow:0 0 8px var(--accent);transition:all 0.3s;
 }
 .window.inactive .title-bar::before{background:var(--dim);box-shadow:none;}
-/* Pin row decoration */
 .title-bar::after{
-  content:'• • • • • • • • •';
-  position:absolute;right:90px;top:50%;transform:translateY(-50%);
-  font-size:5px;color:var(--dim);letter-spacing:3px;
-  pointer-events:none;
+  content:'• • • • • • • • •';position:absolute;right:90px;top:50%;transform:translateY(-50%);
+  font-size:5px;color:var(--dim);letter-spacing:3px;pointer-events:none;
 }
 .window.focused .title-bar::after{color:rgba(0,229,184,0.2);}
 
 .title-bar-icon{font-size:11px;line-height:1;flex-shrink:0;opacity:0.7;margin-left:10px;}
 .title-bar-text{
-  font-family:var(--font-mono);font-size:10px;
-  color:var(--accent);flex:1;white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis;letter-spacing:0.08em;
-  text-transform:uppercase;
-  text-shadow:0 0 8px rgba(0,229,184,0.4);
-  transition:color 0.25s,text-shadow 0.25s;
+  font-family:var(--font-mono);font-size:10px;color:var(--accent);flex:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  letter-spacing:0.08em;text-transform:uppercase;
+  text-shadow:0 0 8px rgba(0,229,184,0.4);transition:color 0.25s,text-shadow 0.25s;
 }
 .window.inactive .title-bar-text{color:var(--muted);text-shadow:none;}
 .title-bar-controls{display:flex;gap:3px;flex-shrink:0;}
 .tb-btn{
-  width:14px;height:14px;border:1px solid var(--dim);
-  background:var(--chrome2);
+  width:14px;height:14px;border:1px solid var(--dim);background:var(--chrome2);
   display:flex;align-items:center;justify-content:center;
   font-size:7px;font-weight:700;color:var(--muted);
-  cursor:pointer;flex-shrink:0;transition:all 0.12s;
+  cursor:pointer;flex-shrink:0;transition:all 0.15s var(--ease);
 }
 .tb-btn:hover{border-color:var(--accent2);color:var(--accent2);background:var(--chrome3);}
 .tb-btn.close-btn:hover{border-color:var(--red);color:var(--red);}
@@ -203,28 +275,23 @@ body::after{
 /* Menu bar */
 .menu-bar{
   background:var(--dimmer);padding:2px 8px;
-  display:flex;gap:0;border-bottom:1px solid var(--dim);
-  flex-shrink:0;
+  display:flex;gap:0;border-bottom:1px solid var(--dim);flex-shrink:0;
 }
 .menu-item{
-  font-family:var(--font-mono);font-size:9.5px;
-  padding:2px 10px;cursor:pointer;color:var(--muted);
-  text-transform:uppercase;letter-spacing:0.06em;
-  transition:all 0.12s;
+  font-family:var(--font-mono);font-size:9.5px;padding:2px 10px;cursor:pointer;color:var(--muted);
+  text-transform:uppercase;letter-spacing:0.06em;transition:all 0.12s var(--ease);
 }
 .menu-item:hover{background:var(--accent);color:var(--bg);}
 
 /* Window body */
 .win-body{
   flex:1;overflow-y:auto;overflow-x:hidden;
-  background:var(--panel);
-  padding:18px 20px;
-  font-family:var(--font-mono);
-  cursor:default;user-select:text;
+  background:var(--panel);padding:18px 20px;
+  font-family:var(--font-mono);cursor:default;user-select:text;
 }
-.win-body::-webkit-scrollbar{width:7px;}
+.win-body::-webkit-scrollbar{width:6px;}
 .win-body::-webkit-scrollbar-track{background:var(--bg);}
-.win-body::-webkit-scrollbar-thumb{background:var(--dim);border:1px solid var(--dimmer);}
+.win-body::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px;}
 .win-body::-webkit-scrollbar-thumb:hover{background:var(--accent);}
 
 /* Status bar */
@@ -234,195 +301,116 @@ body::after{
 }
 .status-pane{
   font-family:var(--font-mono);font-size:8.5px;color:var(--muted);
-  padding:1px 8px;flex:1;letter-spacing:0.08em;
-  border-right:1px solid var(--dim);
+  padding:1px 8px;flex:1;letter-spacing:0.08em;border-right:1px solid var(--dim);
 }
 .status-pane:last-child{border-right:none;}
 .status-led{
-  display:inline-block;width:5px;height:5px;
-  background:var(--accent);border-radius:50%;
-  margin-right:5px;
-  box-shadow:0 0 4px var(--accent);
+  display:inline-block;width:5px;height:5px;background:var(--accent);
+  border-radius:50%;margin-right:5px;box-shadow:0 0 4px var(--accent);
   animation:blink 2.5s ease-in-out infinite;
 }
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
 
-/* ════════════════════════
+/* ═══════════════════════
    TYPOGRAPHY
-════════════════════════ */
+═══════════════════════ */
 .win-body h1{
   font-family:var(--font-hd);font-size:1.7rem;font-weight:900;
-  line-height:1.05;color:var(--bright);
-  letter-spacing:0.04em;text-transform:uppercase;
+  line-height:1.05;color:var(--bright);letter-spacing:0.04em;text-transform:uppercase;
 }
 .win-body h1 span.hl{color:var(--accent);}
 .win-body h2{
   font-family:var(--font-hd);font-size:0.72rem;font-weight:600;
   letter-spacing:0.2em;color:var(--accent);
-  margin-bottom:1rem;margin-top:0.2rem;
-  text-transform:uppercase;
+  margin-bottom:1rem;margin-top:0.2rem;text-transform:uppercase;
   display:flex;align-items:center;gap:8px;
 }
-.win-body h2::before{
-  content:'';display:inline-block;width:20px;height:1px;
-  background:var(--accent);box-shadow:var(--glow);
-}
-.win-body h2::after{
-  content:'';flex:1;height:1px;
-  background:linear-gradient(90deg,var(--accent),transparent);
-  box-shadow:0 0 4px var(--accent);
-}
-.win-body h3{
-  font-family:var(--font-code);font-size:0.83rem;font-weight:700;
-  color:var(--text);margin-bottom:2px;
-}
+.win-body h2::before{content:'';display:inline-block;width:20px;height:1px;background:var(--accent);box-shadow:var(--glow);}
+.win-body h2::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--accent),transparent);box-shadow:0 0 4px var(--accent);}
+.win-body h3{font-family:var(--font-code);font-size:0.83rem;font-weight:700;color:var(--text);margin-bottom:2px;}
 .win-body p{font-family:var(--font-mono);font-size:0.78rem;line-height:1.9;color:var(--muted);}
-.win-body .subtitle{
-  font-family:var(--font-mono);font-size:0.76rem;
-  color:var(--accent3);margin:3px 0 10px;letter-spacing:0.06em;
-}
+.win-body .subtitle{font-family:var(--font-mono);font-size:0.76rem;color:var(--accent3);margin:3px 0 10px;letter-spacing:0.06em;}
 .chip-tag{
-  font-family:var(--font-mono);font-size:0.7rem;
-  background:var(--dimmer);padding:2px 10px;
-  border:1px solid var(--dim);color:var(--accent3);
-  display:inline-block;margin:2px;letter-spacing:0.06em;
-  text-transform:uppercase;
+  font-family:var(--font-mono);font-size:0.7rem;background:var(--dimmer);
+  padding:2px 10px;border:1px solid var(--dim);color:var(--accent3);
+  display:inline-block;margin:2px;letter-spacing:0.06em;text-transform:uppercase;
 }
 
-/* ════════════════════════
-   ABOUT — landscape layout
-════════════════════════ */
-.about-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  grid-template-rows:auto auto;
-  gap:16px;
-  height:100%;
-}
-.about-left{
-  grid-column:1;grid-row:1/3;
-  display:flex;flex-direction:column;gap:10px;
-}
+/* ═══════════════════════
+   ABOUT
+═══════════════════════ */
+.about-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;gap:16px;height:100%;}
+.about-left{grid-column:1;grid-row:1/3;display:flex;flex-direction:column;gap:10px;}
 .about-right-top{grid-column:2;grid-row:1;}
 .about-right-bot{grid-column:2;grid-row:2;}
-
 .about-name-block{margin-bottom:8px;}
-.about-bio{
-  font-family:var(--font-mono);font-size:0.77rem;
-  line-height:1.85;color:var(--muted);
-  flex:1;
-}
+.about-bio{font-family:var(--font-mono);font-size:0.77rem;line-height:1.85;color:var(--muted);flex:1;}
 .about-bio em{color:var(--accent);font-style:normal;}
-
-/* IC chip decoration for about */
-.ic-chip{
-  background:var(--dimmer);border:1px solid var(--dim);
-  padding:12px 14px;position:relative;
-  overflow:hidden;
-}
-.ic-chip::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,var(--accent),transparent);
-  opacity:0.4;
-}
-/* Pin marks on IC chip sides */
-.ic-chip .pins-left,.ic-chip .pins-right{
-  position:absolute;top:0;bottom:0;width:6px;
-  display:flex;flex-direction:column;justify-content:space-evenly;
-  pointer-events:none;
-}
+.ic-chip{background:var(--dimmer);border:1px solid var(--dim);padding:12px 14px;position:relative;overflow:hidden;}
+.ic-chip::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0.4;}
+.ic-chip .pins-left,.ic-chip .pins-right{position:absolute;top:0;bottom:0;width:6px;display:flex;flex-direction:column;justify-content:space-evenly;pointer-events:none;}
 .ic-chip .pins-left{left:0;}
 .ic-chip .pins-right{right:0;}
-.ic-chip .pin{
-  width:4px;height:8px;
-  background:var(--dim);
-  border-top:1px solid var(--muted);border-bottom:1px solid var(--muted);
-}
+.ic-chip .pin{width:4px;height:8px;background:var(--dim);border-top:1px solid var(--muted);border-bottom:1px solid var(--muted);}
 .ic-chip.active .pin{background:rgba(0,229,184,0.3);}
-
-.stat-block{
-  display:grid;grid-template-columns:1fr 1fr;gap:6px;
-  margin-top:auto;
-}
+.stat-block{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:auto;}
 .stat-cell{
-  background:var(--dimmer);border:1px solid var(--dim);
-  padding:10px 8px;text-align:center;position:relative;
-  overflow:hidden;transition:border-color 0.2s,background 0.2s;
+  background:var(--dimmer);border:1px solid var(--dim);padding:10px 8px;text-align:center;
+  position:relative;overflow:hidden;transition:border-color 0.25s var(--ease),background 0.25s var(--ease),transform 0.2s var(--ease);
 }
-.stat-cell:hover{border-color:var(--accent);background:var(--chrome2);}
-.stat-cell::after{
-  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
-  background:var(--accent);transform:scaleX(0);
-  transition:transform 0.25s;transform-origin:left;
-}
+.stat-cell:hover{border-color:var(--accent);background:var(--chrome2);transform:translateY(-1px);}
+.stat-cell::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent);transform:scaleX(0);transition:transform 0.3s var(--ease);transform-origin:left;}
 .stat-cell:hover::after{transform:scaleX(1);}
-.stat-val{
-  font-family:var(--font-hd);font-size:1.55rem;
-  color:var(--accent);display:block;line-height:1;
-  font-weight:700;text-shadow:0 0 12px rgba(0,229,184,0.4);
-}
-.stat-label{
-  font-family:var(--font-mono);font-size:7.5px;color:var(--muted);
-  letter-spacing:0.14em;text-transform:uppercase;margin-top:3px;
-}
+.stat-val{font-family:var(--font-hd);font-size:1.55rem;color:var(--accent);display:block;line-height:1;font-weight:700;text-shadow:0 0 12px rgba(0,229,184,0.4);}
+.stat-label{font-family:var(--font-mono);font-size:7.5px;color:var(--muted);letter-spacing:0.14em;text-transform:uppercase;margin-top:3px;}
 
-/* avatar area */
-.avatar-area{
-  display:flex;justify-content:center;align-items:center;
-  padding:8px 0;position:relative;
-}
-/* spinning IC package ring */
-.ic-ring{
-  position:relative;width:80px;height:80px;
-  display:flex;align-items:center;justify-content:center;
-}
-.ic-ring::before{
-  content:'';position:absolute;inset:-6px;
-  border:1px solid rgba(0,229,184,0.3);
-  animation:ring-spin 10s linear infinite;
-}
+/* Avatar */
+.avatar-area{display:flex;justify-content:center;align-items:center;padding:8px 0;position:relative;}
+.ic-ring{position:relative;width:80px;height:80px;display:flex;align-items:center;justify-content:center;}
+.ic-ring::before{content:'';position:absolute;inset:-6px;border:1px solid rgba(0,229,184,0.3);animation:ring-spin 10s linear infinite;}
 @keyframes ring-spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-.ic-ring-dots{
-  position:absolute;inset:-6px;
-  animation:ring-spin 10s linear infinite;
-}
-.ic-dot{
-  position:absolute;width:4px;height:4px;
-  background:var(--accent);box-shadow:var(--glow);
-}
+.ic-ring-dots{position:absolute;inset:-6px;animation:ring-spin 10s linear infinite;}
+.ic-dot{position:absolute;width:4px;height:4px;background:var(--accent);box-shadow:var(--glow);}
 .ic-dot:nth-child(1){top:0;left:50%;transform:translateX(-50%);}
 .ic-dot:nth-child(2){bottom:0;left:50%;transform:translateX(-50%);}
 .ic-dot:nth-child(3){left:0;top:50%;transform:translateY(-50%);}
 .ic-dot:nth-child(4){right:0;top:50%;transform:translateY(-50%);}
 
-/* contact tiles for about-right */
+/* Contact tiles */
 .contact-tiles{display:flex;flex-direction:column;gap:6px;}
-.contact-tile{
-  display:flex;align-items:center;gap:10px;
-  padding:7px 10px;border:1px solid var(--dim);background:var(--dimmer);
-  transition:all 0.15s;cursor:pointer;text-decoration:none;
-}
-.contact-tile:hover{border-color:var(--accent);background:var(--chrome2);transform:translateX(2px);}
+.contact-tile{display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--dim);background:var(--dimmer);transition:all 0.2s var(--ease);cursor:pointer;text-decoration:none;}
+.contact-tile:hover{border-color:var(--accent);background:var(--chrome2);transform:translateX(3px);}
 .ct-icon{font-size:0.95rem;opacity:0.75;flex-shrink:0;}
 .ct-label{font-family:var(--font-mono);font-size:7.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.12em;min-width:46px;}
 .ct-val{font-family:var(--font-mono);font-size:0.74rem;color:var(--accent3);text-decoration:none;letter-spacing:0.03em;}
-.ct-val:hover{color:var(--accent);}
-
-/* tag row */
 .tag-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;}
 
-/* ════════════════════════
+/* Resume button */
+.resume-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:transparent;border:1px solid var(--accent);
+  padding:7px 16px;font-family:var(--font-mono);font-size:9px;
+  color:var(--accent);cursor:pointer;text-transform:uppercase;
+  letter-spacing:0.14em;margin-top:12px;
+  transition:all 0.2s var(--ease);position:relative;overflow:hidden;
+  text-decoration:none;
+}
+.resume-btn::before{
+  content:'';position:absolute;inset:0;
+  background:var(--accent);transform:scaleX(0);transform-origin:left;
+  transition:transform 0.25s var(--ease);
+}
+.resume-btn:hover::before{transform:scaleX(1);}
+.resume-btn:hover{color:var(--bg);box-shadow:var(--glow);}
+.resume-btn span{position:relative;z-index:1;}
+.resume-btn .dl-arrow{position:relative;z-index:1;font-size:12px;}
+
+/* ═══════════════════════
    EXPERIENCE
-════════════════════════ */
-.exp-item{
-  padding:12px 0 12px 14px;border-bottom:1px solid var(--dimmer);
-  position:relative;transition:background 0.15s;
-}
+═══════════════════════ */
+.exp-item{padding:12px 0 12px 14px;border-bottom:1px solid var(--dimmer);position:relative;transition:background 0.2s;}
 .exp-item:last-child{border-bottom:none;}
-.exp-item::before{
-  content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
-  background:var(--dim);transition:background 0.2s,box-shadow 0.2s;
-}
+.exp-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--dim);transition:background 0.25s,box-shadow 0.25s;}
 .exp-item:hover::before{background:var(--accent);box-shadow:0 0 6px var(--accent);}
 .exp-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:4px;}
 .exp-company{font-family:var(--font-mono);font-size:8.5px;text-transform:uppercase;letter-spacing:0.14em;color:var(--accent);margin-bottom:2px;}
@@ -430,254 +418,158 @@ body::after{
 .exp-desc{font-size:0.75rem;color:var(--muted);line-height:1.85;margin-top:5px;font-family:var(--font-mono);}
 .exp-desc strong{color:var(--accent2);}
 
-/* ════════════════════════
+/* ═══════════════════════
    PROJECTS
-════════════════════════ */
+═══════════════════════ */
 .project-item{
   background:var(--dimmer);border:1px solid var(--dim);
   border-left:2px solid var(--accent3);
   padding:12px;margin-bottom:10px;
-  transition:border-color 0.15s,background 0.15s,transform 0.15s;
+  transition:border-color 0.2s var(--ease),background 0.2s var(--ease),transform 0.2s var(--ease),box-shadow 0.2s var(--ease);
   position:relative;overflow:hidden;
 }
-.project-item::after{
-  content:'';position:absolute;top:0;right:0;
-  width:30px;height:30px;
-  background:radial-gradient(circle,rgba(79,158,255,0.06),transparent 70%);
-  pointer-events:none;
-}
-.project-item:hover{
-  background:var(--chrome2);border-left-color:var(--accent);
-  transform:translateX(2px);
-  box-shadow:0 0 14px rgba(0,229,184,0.06);
-}
+.project-item::after{content:'';position:absolute;top:0;right:0;width:30px;height:30px;background:radial-gradient(circle,rgba(79,158,255,0.06),transparent 70%);pointer-events:none;}
+.project-item:hover{background:var(--chrome2);border-left-color:var(--accent);transform:translateX(3px);box-shadow:0 0 20px rgba(0,229,184,0.06);}
 .p-meta{font-family:var(--font-mono);font-size:8px;color:var(--accent3);text-transform:uppercase;letter-spacing:0.14em;margin-bottom:4px;}
 .p-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;}
-.p-tag{
-  font-family:var(--font-mono);font-size:0.68rem;
-  background:var(--chrome3);padding:2px 8px;
-  border:1px solid var(--dim);color:var(--accent2);
-  text-transform:uppercase;letter-spacing:0.06em;
-}
+.p-tag{font-family:var(--font-mono);font-size:0.68rem;background:var(--chrome3);padding:2px 8px;border:1px solid var(--dim);color:var(--accent2);text-transform:uppercase;letter-spacing:0.06em;}
 
-/* ════════════════════════
+/* ═══════════════════════
    SKILLS
-════════════════════════ */
+═══════════════════════ */
 .skill-group{margin-bottom:14px;}
-.skill-group-title{
-  font-family:var(--font-mono);font-size:8.5px;font-weight:700;
-  text-transform:uppercase;letter-spacing:0.16em;
-  color:var(--accent2);margin-bottom:7px;
-  display:flex;align-items:center;gap:6px;
-}
+.skill-group-title{font-family:var(--font-mono);font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.16em;color:var(--accent2);margin-bottom:7px;display:flex;align-items:center;gap:6px;}
 .skill-group-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--dim),transparent);}
 .s-pills{display:flex;flex-wrap:wrap;gap:5px;}
-.s-pill{
-  font-family:var(--font-mono);font-size:0.72rem;
-  background:var(--dimmer);color:var(--text);
-  padding:4px 12px;border:1px solid var(--dim);
-  letter-spacing:0.04em;text-transform:uppercase;
-  cursor:default;transition:all 0.12s;
-}
-.s-pill:hover{background:var(--accent);color:var(--bg);border-color:var(--accent);box-shadow:var(--glow);}
+.s-pill{font-family:var(--font-mono);font-size:0.72rem;background:var(--dimmer);color:var(--text);padding:4px 12px;border:1px solid var(--dim);letter-spacing:0.04em;text-transform:uppercase;cursor:default;transition:all 0.18s var(--ease);}
+.s-pill:hover{background:var(--accent);color:var(--bg);border-color:var(--accent);box-shadow:var(--glow);transform:translateY(-1px);}
 
-/* ════════════════════════
+/* ═══════════════════════
    EDUCATION
-════════════════════════ */
-.edu-item{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:12px 0;border-bottom:1px solid var(--dimmer);
-  flex-wrap:wrap;gap:6px;transition:background 0.15s;
-}
-.edu-item:hover{background:rgba(0,229,184,0.02);}
+═══════════════════════ */
+.edu-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--dimmer);flex-wrap:wrap;gap:6px;transition:background 0.2s,padding-left 0.2s;}
+.edu-item:hover{background:rgba(0,229,184,0.02);padding-left:6px;}
 .edu-item:last-child{border-bottom:none;}
-.edu-score{
-  font-family:var(--font-hd);font-size:1.55rem;color:var(--accent);
-  font-weight:700;text-shadow:0 0 10px rgba(0,229,184,0.4);
-}
+.edu-score{font-family:var(--font-hd);font-size:1.55rem;color:var(--accent);font-weight:700;text-shadow:0 0 10px rgba(0,229,184,0.4);}
 
-/* ════════════════════════
+/* ═══════════════════════
    PUBLICATIONS
-════════════════════════ */
-.pub-item{
-  display:flex;gap:14px;align-items:flex-start;
-  padding:12px 0;border-bottom:1px solid var(--dimmer);
-  transition:background 0.15s;
-}
+═══════════════════════ */
+.pub-item{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--dimmer);transition:background 0.2s;}
 .pub-item:hover{background:rgba(0,229,184,0.02);}
 .pub-item:last-child{border-bottom:none;}
 .pub-num{font-family:var(--font-hd);font-size:1.35rem;color:var(--dim);flex-shrink:0;line-height:1.1;font-weight:700;}
 .pub-venue{font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:0.14em;color:var(--accent);margin-bottom:4px;}
 .pub-title{font-family:var(--font-mono);font-size:0.76rem;line-height:1.6;color:var(--text);}
 
-/* ════════════════════════
-   CONTACT WINDOW
-════════════════════════ */
-.contact-win-links{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
-.contact-link-row{
-  display:flex;align-items:center;gap:10px;
-  padding:8px 12px;border:1px solid var(--dim);background:var(--dimmer);
-  transition:all 0.15s;cursor:pointer;text-decoration:none;
-}
+/* ═══════════════════════
+   CONTACT
+═══════════════════════ */
+.contact-win-links{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+.contact-link-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--dim);background:var(--dimmer);transition:all 0.2s var(--ease);cursor:pointer;text-decoration:none;}
 .contact-link-row:hover{border-color:var(--accent);background:var(--chrome2);transform:translateX(3px);}
 .contact-icon{font-size:1rem;opacity:0.7;}
 .contact-label{font-family:var(--font-mono);font-size:7.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.12em;min-width:52px;}
 .contact-val{font-family:var(--font-mono);font-size:0.76rem;color:var(--accent3);text-decoration:none;letter-spacing:0.04em;}
-.contact-val:hover{color:var(--accent);}
-.win98-btn{
-  background:var(--dimmer);border:1px solid var(--dim);
-  padding:7px 20px;font-family:var(--font-mono);font-size:10px;
-  color:var(--text);cursor:pointer;text-transform:uppercase;
-  letter-spacing:0.1em;margin-top:14px;
-  transition:all 0.15s;display:inline-block;
-}
+.win98-btn{background:var(--dimmer);border:1px solid var(--dim);padding:7px 20px;font-family:var(--font-mono);font-size:10px;color:var(--text);cursor:pointer;text-transform:uppercase;letter-spacing:0.1em;margin-top:14px;transition:all 0.18s var(--ease);display:inline-block;}
 .win98-btn:hover{background:var(--accent);color:var(--bg);border-color:var(--accent);box-shadow:var(--glow);}
-.win98-btn:active{transform:translate(1px,1px);}
-.availability-badge{
-  display:inline-flex;align-items:center;gap:6px;
-  font-family:var(--font-mono);font-size:8px;
-  color:var(--accent);text-transform:uppercase;letter-spacing:0.1em;
-  background:var(--dimmer);border:1px solid rgba(0,229,184,0.3);
-  padding:4px 10px;margin-bottom:12px;
-}
+.availability-badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:8px;color:var(--accent);text-transform:uppercase;letter-spacing:0.1em;background:var(--dimmer);border:1px solid rgba(0,229,184,0.3);padding:4px 10px;margin-bottom:12px;}
 
-/* ════════════════════════
+/* ═══════════════════════
    TASKBAR
-════════════════════════ */
+═══════════════════════ */
 #taskbar{
-  position:fixed;bottom:0;left:0;right:0;
-  height:var(--tb-h);background:var(--chrome);
-  display:flex;align-items:center;
-  padding:3px 6px;gap:5px;
-  border-top:1px solid var(--dim);
-  box-shadow:0 -2px 16px rgba(0,0,0,0.6);
-  z-index:1000;
+  position:fixed;bottom:0;left:0;right:0;height:var(--tb-h);background:var(--chrome);
+  display:flex;align-items:center;padding:3px 6px;gap:5px;
+  border-top:1px solid var(--dim);box-shadow:0 -2px 20px rgba(0,0,0,0.7);z-index:1000;
 }
 #start-btn{
-  display:flex;align-items:center;gap:7px;
-  padding:4px 14px;height:34px;min-width:82px;
-  background:var(--dimmer);border:1px solid var(--dim);
-  cursor:pointer;
-  font-family:var(--font-mono);font-size:11px;
-  color:var(--accent);text-transform:uppercase;letter-spacing:0.1em;
-  transition:all 0.15s;position:relative;overflow:hidden;
+  display:flex;align-items:center;gap:7px;padding:4px 14px;height:34px;min-width:82px;
+  background:var(--dimmer);border:1px solid var(--dim);cursor:pointer;
+  font-family:var(--font-mono);font-size:11px;color:var(--accent);text-transform:uppercase;
+  letter-spacing:0.1em;transition:all 0.2s var(--ease);position:relative;overflow:hidden;
 }
-#start-btn::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,transparent 40%,rgba(0,229,184,0.06));
-  pointer-events:none;
-}
-#start-btn:hover,#start-btn.active{
-  background:var(--accent);color:var(--bg);
-  border-color:var(--accent);box-shadow:var(--glow);
-}
+#start-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 40%,rgba(0,229,184,0.06));pointer-events:none;}
+#start-btn:hover,#start-btn.active{background:var(--accent);color:var(--bg);border-color:var(--accent);box-shadow:var(--glow);}
 .taskbar-divider{width:1px;height:28px;background:linear-gradient(to bottom,transparent,var(--dim),transparent);flex-shrink:0;}
 .taskbar-apps{flex:1;display:flex;gap:3px;overflow-x:auto;align-items:center;}
+.taskbar-apps::-webkit-scrollbar{display:none;}
 .tb-app-btn{
   height:30px;min-width:100px;max-width:140px;
-  background:var(--dimmer);border:1px solid var(--dim);
-  cursor:pointer;padding:2px 8px;
-  font-family:var(--font-mono);font-size:9px;color:var(--muted);
-  display:flex;align-items:center;gap:5px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  text-transform:uppercase;letter-spacing:0.05em;
-  transition:all 0.12s;
+  background:var(--dimmer);border:1px solid var(--dim);cursor:pointer;
+  padding:2px 8px;font-family:var(--font-mono);font-size:9px;color:var(--muted);
+  display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  text-transform:uppercase;letter-spacing:0.05em;transition:all 0.15s var(--ease);flex-shrink:0;
 }
 .tb-app-btn.active{background:var(--chrome2);color:var(--accent);border-color:rgba(0,229,184,0.4);box-shadow:inset 0 -2px 0 var(--accent);}
 .tb-app-btn:hover:not(.active){background:var(--chrome2);color:var(--text);}
-.sys-tray{
-  display:flex;align-items:center;gap:8px;
-  padding:2px 12px;height:34px;
-  border:1px solid var(--dim);background:var(--dimmer);
-}
+.sys-tray{display:flex;align-items:center;gap:8px;padding:2px 12px;height:34px;border:1px solid var(--dim);background:var(--dimmer);}
 #clock{font-family:var(--font-mono);font-size:10px;color:var(--accent2);letter-spacing:0.1em;}
 .tray-led{width:6px;height:6px;background:var(--accent);border-radius:50%;box-shadow:var(--glow);animation:blink 2.5s ease-in-out infinite;}
 
-/* ════════════════════════
+/* ═══════════════════════
    START MENU
-════════════════════════ */
+═══════════════════════ */
 #start-menu{
-  position:fixed;bottom:var(--tb-h);left:0;
-  width:210px;background:var(--chrome);
-  border:1px solid rgba(0,229,184,0.25);
-  border-bottom:none;z-index:999;display:none;
-  box-shadow:4px -4px 24px rgba(0,0,0,0.7),0 0 2px var(--accent);
+  position:fixed;bottom:var(--tb-h);left:0;width:210px;background:var(--chrome);
+  border:1px solid rgba(0,229,184,0.25);border-bottom:none;z-index:999;
+  display:none;box-shadow:4px -4px 28px rgba(0,0,0,0.8),0 0 2px var(--accent);
+  transform:translateY(8px);opacity:0;
+  transition:transform 0.2s var(--ease), opacity 0.2s var(--ease);
 }
-#start-menu.open{display:flex;}
-.start-sidebar{
-  width:28px;
-  background:linear-gradient(to top,var(--accent),var(--dim));
-  writing-mode:vertical-rl;text-orientation:mixed;
-  display:flex;align-items:center;justify-content:flex-end;
-  padding-bottom:10px;
-  font-family:var(--font-mono);font-size:8.5px;
-  color:rgba(0,0,0,0.65);letter-spacing:0.2em;text-transform:uppercase;
-  flex-shrink:0;
-}
+#start-menu.open{display:flex;transform:translateY(0);opacity:1;}
+.start-sidebar{width:28px;background:linear-gradient(to top,var(--accent),var(--dim));writing-mode:vertical-rl;text-orientation:mixed;display:flex;align-items:center;justify-content:flex-end;padding-bottom:10px;font-family:var(--font-mono);font-size:8.5px;color:rgba(0,0,0,0.65);letter-spacing:0.2em;text-transform:uppercase;flex-shrink:0;}
 .start-items{flex:1;padding:4px 0;}
-.start-item{
-  display:flex;align-items:center;gap:8px;
-  padding:7px 12px 7px 10px;
-  font-family:var(--font-mono);font-size:10px;color:var(--text);
-  cursor:pointer;letter-spacing:0.06em;text-transform:uppercase;
-  transition:all 0.1s;
-}
+.start-item{display:flex;align-items:center;gap:8px;padding:7px 12px 7px 10px;font-family:var(--font-mono);font-size:10px;color:var(--text);cursor:pointer;letter-spacing:0.06em;text-transform:uppercase;transition:all 0.12s var(--ease);}
 .start-item:hover{background:var(--accent);color:var(--bg);}
 .start-item .si-icon{font-size:12px;flex-shrink:0;}
 .start-divider{height:1px;background:var(--dim);margin:3px 8px;}
 
-/* ════════════════════════
+/* ═══════════════════════
    DIALOG
-════════════════════════ */
-#dialog{
-  display:none;position:fixed;top:50%;left:50%;
-  transform:translate(-50%,-50%);
-  width:340px;background:var(--chrome);z-index:2000;
-  border:1px solid var(--accent);
-  box-shadow:0 0 40px rgba(0,229,184,0.2),0 10px 40px rgba(0,0,0,0.85);
-}
+═══════════════════════ */
+#dialog{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:340px;background:var(--chrome);z-index:2000;border:1px solid var(--accent);box-shadow:0 0 40px rgba(0,229,184,0.2),0 10px 40px rgba(0,0,0,0.85);}
 #dialog .title-bar{cursor:default;}
 .dialog-body{padding:18px;display:flex;gap:14px;align-items:flex-start;}
 .dialog-icon{font-size:1.7rem;flex-shrink:0;opacity:0.8;}
 .dialog-text{font-family:var(--font-mono);font-size:10px;line-height:1.8;color:var(--text);letter-spacing:0.04em;}
 .dialog-btns{display:flex;justify-content:center;gap:8px;padding:0 18px 16px;}
 
-/* ════════════════════════
+/* ═══════════════════════
    SHUTDOWN
-════════════════════════ */
-#shutdown-overlay{
-  display:none;position:fixed;inset:0;z-index:9999;
-  background:var(--bg);
-  flex-direction:column;align-items:center;justify-content:center;gap:22px;
-}
+═══════════════════════ */
+#shutdown-overlay{display:none;position:fixed;inset:0;z-index:9999;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;gap:22px;}
 #shutdown-overlay.active{display:flex;}
-.shutdown-ascii{
-  font-family:var(--font-mono);font-size:0.62rem;
-  color:var(--accent);line-height:1.4;text-align:center;
-  text-shadow:0 0 8px rgba(0,229,184,0.4);white-space:pre;
-}
+.shutdown-ascii{font-family:var(--font-mono);font-size:0.62rem;color:var(--accent);line-height:1.4;text-align:center;text-shadow:0 0 8px rgba(0,229,184,0.4);white-space:pre;}
 #shutdown-msg{font-family:var(--font-mono);font-size:0.95rem;color:var(--text);letter-spacing:0.1em;text-align:center;text-transform:uppercase;}
 .shutdown-bar-wrap{width:320px;height:12px;background:var(--dimmer);border:1px solid var(--dim);position:relative;overflow:hidden;}
 .shutdown-bar-fill{height:100%;width:0;background:repeating-linear-gradient(90deg,var(--accent) 0,var(--accent) 10px,rgba(0,229,184,0.3) 10px,rgba(0,229,184,0.3) 20px);transition:width 3s linear;box-shadow:0 0 8px var(--accent);}
 .shutdown-sub{font-family:var(--font-mono);font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;text-align:center;}
 
-/* ════════════════════════
-   OPEN ANIMATION
-════════════════════════ */
-@keyframes win-open{from{opacity:0;clip-path:inset(50% 50% 50% 50%);}to{opacity:1;clip-path:inset(0% 0% 0% 0%);}}
-.window.opening{animation:win-open 0.22s ease-out forwards;}
+/* ═══════════════════════
+   WINDOW OPEN ANIMATION
+═══════════════════════ */
+@keyframes win-open{
+  from{opacity:0;transform:scale(0.96) translateY(6px);}
+  to{opacity:1;transform:scale(1) translateY(0);}
+}
+.window.opening{animation:win-open 0.28s var(--ease) forwards;}
 
-/* Smooth window focus pulse */
-@keyframes focus-pulse{0%{box-shadow:0 0 0 1px var(--dimmer),0 0 30px rgba(0,229,184,0.2),0 8px 40px rgba(0,0,0,0.85);}100%{box-shadow:0 0 0 1px var(--dimmer),0 0 18px rgba(0,229,184,0.1),0 8px 40px rgba(0,0,0,0.85);}}
-
-/* ════════════════════════
+/* ═══════════════════════
    MOBILE
-════════════════════════ */
+═══════════════════════ */
 @media(max-width:700px){
+  :root{--tb-h:56px;}
+  body{cursor:auto;overflow:auto;}
+  #boot .boot-logo{font-size:1.1rem;}
+  #desktop{position:relative;inset:auto;overflow:visible;bottom:auto;min-height:calc(100vh - 56px);display:flex;flex-direction:column;padding:8px 8px 8px 8px;gap:8px;}
+  #desktop-bg{display:none;}
+  #mouse-glow{display:none;}
   .desktop-icons{display:none;}
-  #desktop{overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;padding:8px 6px;gap:6px;}
-  .window{position:relative!important;width:100%!important;height:auto!important;left:0!important;top:0!important;}
-  .win-body{max-height:none!important;}
+  #widget-sysmon,#widget-coords{display:none;}
+  .window{position:relative!important;width:100%!important;height:auto!important;left:0!important;top:0!important;min-height:unset;}
+  .window.minimized{display:none!important;}
+  .win-body{max-height:none!important;overflow-y:visible!important;}
   .title-bar{cursor:default;}
   .window::before,.window::after{display:none;}
   .about-grid{grid-template-columns:1fr;}
@@ -685,49 +577,148 @@ body::after{
   .about-right-top{grid-column:1;grid-row:auto;}
   .about-right-bot{grid-column:1;grid-row:auto;}
   .stat-block{grid-template-columns:repeat(4,1fr);}
-  .tb-app-btn{min-width:70px;font-size:8.5px;}
-  #start-btn{min-width:60px;font-size:10px;}
+  .win-body h1{font-size:1.3rem;}
+  #taskbar{display:none;}
+  #mobile-nav{display:flex!important;}
+  #start-menu{display:none!important;}
 }
 @media(max-width:420px){
-  .win-body{padding:12px 12px;}
-  .win-body h1{font-size:1.25rem;}
+  .win-body{padding:12px;}
+  .win-body h1{font-size:1.1rem;}
   .stat-block{grid-template-columns:repeat(2,1fr);}
 }
+
+/* ═══════════════════════
+   MOBILE NAV
+═══════════════════════ */
+#mobile-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  height:56px;background:var(--chrome);
+  border-top:1px solid var(--dim);
+  z-index:1000;
+  box-shadow:0 -4px 24px rgba(0,0,0,0.7);
+  overflow-x:auto;
+}
+#mobile-nav::-webkit-scrollbar{display:none;}
+.mob-nav-inner{
+  display:flex;align-items:center;justify-content:space-around;
+  min-width:100%;height:100%;padding:0 4px;gap:2px;
+}
+.mob-nav-btn{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;flex:1;min-width:46px;height:100%;
+  cursor:pointer;border:none;background:transparent;
+  transition:background 0.15s var(--ease);padding:4px 2px;
+  -webkit-tap-highlight-color:transparent;
+}
+.mob-nav-btn:active,.mob-nav-btn.active{background:rgba(0,229,184,0.08);}
+.mob-nav-icon{font-size:1.1rem;line-height:1;}
+.mob-nav-label{font-family:var(--font-mono);font-size:7px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;line-height:1;}
+.mob-nav-btn.active .mob-nav-label{color:var(--accent);}
+.mob-nav-btn.active .mob-nav-icon{filter:drop-shadow(0 0 4px var(--accent));}
 </style>
 </head>
 <body>
 
+<!-- Boot Screen -->
+<div id="boot">
+  <div class="boot-logo">PCB-OS v2.0</div>
+  <div class="boot-line" style="animation-delay:0.2s">Initializing PUJITHA-v1.0...</div>
+  <div class="boot-bar-wrap"><div class="boot-bar" id="boot-bar"></div></div>
+  <div class="boot-line" style="animation-delay:0.4s;font-size:0.65rem;color:var(--dim)">BNMIT ECE · VLSI · RTL · Bengaluru</div>
+</div>
+
+<!-- Mouse glow -->
+<div id="mouse-glow"></div>
+
+<!-- Desktop -->
 <div id="desktop">
+
+  <!-- Background decorations -->
+  <div id="desktop-bg">
+    <div class="ambient-light" style="width:600px;height:400px;background:radial-gradient(circle,rgba(0,229,184,0.025),transparent);top:-100px;left:-100px;animation-duration:14s;"></div>
+    <div class="ambient-light" style="width:500px;height:350px;background:radial-gradient(circle,rgba(79,158,255,0.02),transparent);bottom:-80px;right:-80px;animation-duration:18s;animation-direction:alternate-reverse;"></div>
+    <div class="ambient-light" style="width:300px;height:300px;background:radial-gradient(circle,rgba(176,96,255,0.015),transparent);top:40%;left:40%;animation-duration:22s;"></div>
+    <!-- Floating hex values (decorative) -->
+    <div class="hex-float" style="left:12%;top:70%;animation-duration:8s;animation-delay:0s">0xA4F2</div>
+    <div class="hex-float" style="left:25%;top:55%;animation-duration:10s;animation-delay:2s">0x1E3B</div>
+    <div class="hex-float" style="left:70%;top:80%;animation-duration:9s;animation-delay:1s">0xFF00</div>
+    <div class="hex-float" style="left:82%;top:60%;animation-duration:12s;animation-delay:3s">0x7C4A</div>
+    <div class="hex-float" style="left:55%;top:75%;animation-duration:11s;animation-delay:0.5s">0xB3D1</div>
+    <!-- SVG circuit traces -->
+    <svg class="trace-canvas" viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      <g opacity="0.07" stroke="#00e5b8" stroke-width="1" fill="none">
+        <polyline points="0,200 120,200 120,400 320,400"/>
+        <circle cx="120" cy="200" r="3" fill="#00e5b8"/>
+        <circle cx="120" cy="400" r="3" fill="#00e5b8"/>
+        <circle cx="320" cy="400" r="3" fill="#00e5b8"/>
+        <polyline points="1400,100 1280,100 1280,350 1100,350 1100,500"/>
+        <circle cx="1280" cy="100" r="3" fill="#00e5b8"/>
+        <circle cx="1280" cy="350" r="3" fill="#00e5b8"/>
+        <circle cx="1100" cy="350" r="3" fill="#00e5b8"/>
+        <polyline points="0,700 200,700 200,600 400,600"/>
+        <circle cx="200" cy="700" r="3" fill="#00e5b8"/>
+        <circle cx="200" cy="600" r="3" fill="#00e5b8"/>
+        <polyline points="900,900 900,750 1050,750 1050,600 1200,600"/>
+        <circle cx="900" cy="750" r="3" fill="#00e5b8"/>
+        <circle cx="1050" cy="750" r="3" fill="#00e5b8"/>
+        <circle cx="1050" cy="600" r="3" fill="#00e5b8"/>
+      </g>
+      <g opacity="0.04" stroke="#4f9eff" stroke-width="1" fill="none">
+        <polyline points="0,450 180,450 180,300 350,300 350,180"/>
+        <polyline points="1400,650 1200,650 1200,800 950,800"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Desktop System Monitor Widget -->
+  <div class="desktop-widget" id="widget-sysmon">
+    <div class="wdg-title">SYS MONITOR</div>
+    <div class="wdg-row"><span class="wdg-label">RTL Effort</span><span class="wdg-val" id="wdg-rtl">MAX</span></div>
+    <div class="wdg-bar"><div class="wdg-fill" id="wdg-rtl-bar" style="width:0%"></div></div>
+    <div style="height:5px"></div>
+    <div class="wdg-row"><span class="wdg-label">FPGA Util</span><span class="wdg-val orange" id="wdg-fpga">82%</span></div>
+    <div class="wdg-bar"><div class="wdg-fill orange" id="wdg-fpga-bar" style="width:0%"></div></div>
+    <div style="height:5px"></div>
+    <div class="wdg-row"><span class="wdg-label">Coffee Lvl</span><span class="wdg-val blue" id="wdg-coffee">48%</span></div>
+    <div class="wdg-bar"><div class="wdg-fill blue" id="wdg-coffee-bar" style="width:0%"></div></div>
+  </div>
+
+  <!-- Coord readout widget -->
+  <div class="desktop-widget" id="widget-coords" style="pointer-events:none;">
+    X:<span id="coord-x">----</span>&nbsp;Y:<span id="coord-y">----</span>
+  </div>
 
   <!-- Left Desktop Icons -->
   <div class="desktop-icons" id="sidebar-icons">
-    <div class="d-icon" id="dicon-about" ondblclick="openWin('about')">
+    <div class="d-icon" id="dicon-about" onclick="toggleWin('about')">
       <div class="icon-img">🖥️</div><div class="icon-label">About</div>
     </div>
-    <div class="d-icon" id="dicon-exp" ondblclick="openWin('exp')">
+    <div class="d-icon" id="dicon-exp" onclick="toggleWin('exp')">
       <div class="icon-img">⚡</div><div class="icon-label">Exp</div>
     </div>
-    <div class="d-icon" id="dicon-projects" ondblclick="openWin('projects')">
+    <div class="d-icon" id="dicon-projects" onclick="toggleWin('projects')">
       <div class="icon-img">🔬</div><div class="icon-label">Projects</div>
     </div>
-    <div class="d-icon" id="dicon-skills" ondblclick="openWin('skills')">
+    <div class="d-icon" id="dicon-skills" onclick="toggleWin('skills')">
       <div class="icon-img">🔧</div><div class="icon-label">Skills</div>
     </div>
-    <div class="d-icon" id="dicon-edu" ondblclick="openWin('edu')">
-      <div class="icon-img">📡</div><div class="icon-label">Education</div>
+    <div class="d-icon" id="dicon-edu" onclick="toggleWin('edu')">
+      <div class="icon-img">📡</div><div class="icon-label">Edu</div>
     </div>
-    <div class="d-icon" id="dicon-pub" ondblclick="openWin('pub')">
+    <div class="d-icon" id="dicon-pub" onclick="toggleWin('pub')">
       <div class="icon-img">📎</div><div class="icon-label">Papers</div>
     </div>
-    <div class="d-icon" id="dicon-contact" ondblclick="openWin('contact')">
-      <div class="icon-img">📡</div><div class="icon-label">Contact</div>
+    <div class="d-icon" id="dicon-contact" onclick="toggleWin('contact')">
+      <div class="icon-img">📬</div><div class="icon-label">Contact</div>
     </div>
-    <div class="d-icon" ondblclick="showDialog()">
-      <div class="icon-img">🗑️</div><div class="icon-label">Bin</div>
+    <div class="d-icon" onclick="showDialog()">
+      <div class="icon-img">💾</div><div class="icon-label">SysInfo</div>
     </div>
   </div>
 
-  <!-- ══ ABOUT (landscape rectangle) ══ -->
+  <!-- ══ ABOUT ══ -->
   <div class="window focused" id="win-about" style="left:500px;top:16px;width:780px;height:500px">
     <div class="pad-tl"></div><div class="pad-tr"></div><div class="pad-bl"></div><div class="pad-br"></div>
     <div class="title-bar" data-win="about">
@@ -742,11 +733,10 @@ body::after{
     <div class="menu-bar">
       <span class="menu-item">File</span>
       <span class="menu-item">View</span>
-      <span class="menu-item">Help</span>
+      <span class="menu-item" onclick="downloadResume()">Download CV</span>
     </div>
     <div class="win-body" style="max-height:420px;">
       <div class="about-grid">
-        <!-- LEFT: name + bio + tags -->
         <div class="about-left">
           <div class="about-name-block">
             <h1>PUJITHA<br><span class="hl">PADMANABHA</span></h1>
@@ -760,11 +750,14 @@ body::after{
           <div class="tag-row">
             <span class="chip-tag">pujitha.2104@gmail.com</span>
             <span class="chip-tag">Bengaluru · IN</span>
-          
           </div>
+          <!-- Resume Download Button -->
+          <button class="resume-btn" onclick="downloadResume()">
+            <span class="dl-arrow">↓</span>
+            <span>Download Resume</span>
+          </button>
         </div>
 
-        <!-- RIGHT TOP: avatar + IC decoration -->
         <div class="about-right-top">
           <div style="display:flex;gap:14px;align-items:flex-start">
             <div class="avatar-area" style="flex-shrink:0">
@@ -773,7 +766,6 @@ body::after{
                   <div class="ic-dot"></div><div class="ic-dot"></div>
                   <div class="ic-dot"></div><div class="ic-dot"></div>
                 </div>
-                <!-- Pixel avatar -->
                 <svg width="64" height="82" viewBox="0 0 16 20" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated;display:block">
                   <rect x="3" y="1" width="10" height="8" fill="#111"/>
                   <rect x="4" y="2" width="8" height="6" fill="#c8956a"/>
@@ -805,7 +797,6 @@ body::after{
                 </svg>
               </div>
             </div>
-            <!-- IC chip info panel -->
             <div class="ic-chip active" style="flex:1;font-size:8px;line-height:1.8">
               <div class="pins-left"><div class="pin"></div><div class="pin"></div><div class="pin"></div></div>
               <div class="pins-right"><div class="pin"></div><div class="pin"></div><div class="pin"></div></div>
@@ -821,25 +812,12 @@ body::after{
           </div>
         </div>
 
-        <!-- RIGHT BOT: stats -->
         <div class="about-right-bot">
           <div class="stat-block">
-            <div class="stat-cell">
-              <span class="stat-val">5</span>
-              <div class="stat-label">Internships</div>
-            </div>
-            <div class="stat-cell">
-              <span class="stat-val">2</span>
-              <div class="stat-label">Papers</div>
-            </div>
-            <div class="stat-cell">
-              <span class="stat-val">'26</span>
-              <div class="stat-label">Grad Year</div>
-            </div>
-            <div class="stat-cell">
-              <span class="stat-val">∞</span>
-              <div class="stat-label">Curiosity</div>
-            </div>
+            <div class="stat-cell"><span class="stat-val">5</span><div class="stat-label">Internships</div></div>
+            <div class="stat-cell"><span class="stat-val">2</span><div class="stat-label">Papers</div></div>
+            <div class="stat-cell"><span class="stat-val">'26</span><div class="stat-label">Grad Year</div></div>
+            <div class="stat-cell"><span class="stat-val">∞</span><div class="stat-label">Curiosity</div></div>
           </div>
         </div>
       </div>
@@ -862,66 +840,46 @@ body::after{
         <button class="tb-btn close-btn" onclick="minimizeWin('exp')">✕</button>
       </div>
     </div>
-    <div class="menu-bar">
-      <span class="menu-item">File</span>
-      <span class="menu-item">Edit</span>
-    </div>
+    <div class="menu-bar"><span class="menu-item">File</span><span class="menu-item">Edit</span></div>
     <div class="win-body" style="max-height:450px">
       <h2>Work Experience</h2>
       <div class="exp-item">
         <div class="exp-header">
-          <div>
-            <div class="exp-company">Frauscher Sensor Technology</div>
-            <h3>Application Engineering Intern</h3>
-          </div>
+          <div><div class="exp-company">Frauscher Sensor Technology</div><h3>Application Engineering Intern</h3></div>
           <span class="exp-date">Nov '25 – May '26</span>
         </div>
         <p class="exp-desc">Hardware testing &amp; signal analysis for railway sensor systems. PCB circuit analysis, system configuration, performance validation, and optimized diagnostic testing sequences.</p>
       </div>
       <div class="exp-item">
         <div class="exp-header">
-          <div>
-            <div class="exp-company">IEEE Circuits and Systems Society</div>
-            <h3>Engineering Intern</h3>
-          </div>
+          <div><div class="exp-company">IEEE Circuits and Systems Society</div><h3>Engineering Intern</h3></div>
           <span class="exp-date">Oct – Dec '25</span>
         </div>
         <p class="exp-desc">Implemented iterative ChaCha20 cryptographic core (8/12/20 rounds) in Xilinx Vivado on FPGA. Achieved up to <strong>4.27 Gbps</strong> throughput.</p>
       </div>
       <div class="exp-item">
         <div class="exp-header">
-          <div>
-            <div class="exp-company">ABB India Limited</div>
-            <h3>Student Intern</h3>
-          </div>
+          <div><div class="exp-company">ABB India Limited</div><h3>Student Intern</h3></div>
           <span class="exp-date">Jul – Oct '25</span>
         </div>
         <p class="exp-desc">Industrial drive systems (VFDs), fault analysis, and power electronics troubleshooting. Built a digital fault tracking system to streamline maintenance workflows.</p>
       </div>
       <div class="exp-item">
         <div class="exp-header">
-          <div>
-            <div class="exp-company">Robomanthan Pvt Ltd</div>
-            <h3>Robotics Intern</h3>
-          </div>
+          <div><div class="exp-company">Robomanthan Pvt Ltd</div><h3>Robotics Intern</h3></div>
           <span class="exp-date">Aug – Sep '24</span>
         </div>
         <p class="exp-desc">ESP32 &amp; Arduino robotic systems — gesture lighting, Bluetooth bots, OpenCV color tracking, Python Roomba simulation.</p>
       </div>
       <div class="exp-item">
         <div class="exp-header">
-          <div>
-            <div class="exp-company">Samsung Innovation Campus</div>
-            <h3>Student Trainee</h3>
-          </div>
+          <div><div class="exp-company">Samsung Innovation Campus</div><h3>Student Trainee</h3></div>
           <span class="exp-date">Oct – Dec '23</span>
         </div>
         <p class="exp-desc">Python-based ML pipeline on Kaggle datasets to detect fraudulent job postings.</p>
       </div>
     </div>
-    <div class="status-bar">
-      <div class="status-pane">5 RECORDS · 2023–2026</div>
-    </div>
+    <div class="status-bar"><div class="status-pane">5 RECORDS · 2023–2026</div></div>
   </div>
 
   <!-- ══ PROJECTS ══ -->
@@ -936,11 +894,7 @@ body::after{
         <button class="tb-btn close-btn" onclick="minimizeWin('projects')">✕</button>
       </div>
     </div>
-    <div class="menu-bar">
-      <span class="menu-item">File</span>
-      <span class="menu-item">View</span>
-      <span class="menu-item">Simulate</span>
-    </div>
+    <div class="menu-bar"><span class="menu-item">File</span><span class="menu-item">View</span><span class="menu-item">Simulate</span></div>
     <div class="win-body" style="max-height:430px">
       <h2>Selected Projects</h2>
       <div class="project-item">
@@ -958,7 +912,7 @@ body::after{
       <div class="project-item">
         <div class="p-meta">// IoT · Embedded Systems</div>
         <h3>Music Reactive Lights using IoT</h3>
-        <p class="exp-desc">Arduino lighting system reacting to audio signals in real time with customizable effects.</p>
+        <p class="exp-desc">Arduino lighting system reacting to audio signals in real time with customizable color effects and threshold tuning.</p>
         <div class="p-tags"><span class="p-tag">Arduino</span><span class="p-tag">IoT</span><span class="p-tag">Audio DSP</span></div>
       </div>
       <div class="project-item">
@@ -1023,30 +977,21 @@ body::after{
     <div class="win-body">
       <h2>Academic Record</h2>
       <div class="edu-item">
-        <div>
-          <h3>B.E. Electronics &amp; Communication Engg.</h3>
-          <div class="exp-company">BNM Institute of Technology, Bengaluru</div>
-        </div>
+        <div><h3>B.E. Electronics &amp; Communication Engg.</h3><div class="exp-company">BNM Institute of Technology, Bengaluru</div></div>
         <div style="text-align:right">
           <div class="edu-score">9.8</div>
           <div style="font-size:8.5px;color:var(--muted);font-family:var(--font-mono);letter-spacing:0.06em">Jun 2026 (Expected)</div>
         </div>
       </div>
       <div class="edu-item">
-        <div>
-          <h3>Pre-University (PCMC)</h3>
-          <div class="exp-company">SKCH PU College</div>
-        </div>
+        <div><h3>Pre-University (PCMC)</h3><div class="exp-company">SKCH PU College</div></div>
         <div style="text-align:right">
           <div class="edu-score">97%</div>
           <div style="font-size:8.5px;color:var(--muted);font-family:var(--font-mono);letter-spacing:0.06em">May 2022</div>
         </div>
       </div>
       <div class="edu-item" style="border-bottom:none">
-        <div>
-          <h3>CBSE Class X</h3>
-          <div class="exp-company">Sri Jnanakshi Vidyaniketan</div>
-        </div>
+        <div><h3>CBSE Class X</h3><div class="exp-company">Sri Jnanakshi Vidyaniketan</div></div>
         <div style="text-align:right">
           <div class="edu-score">96%</div>
           <div style="font-size:8.5px;color:var(--muted);font-family:var(--font-mono);letter-spacing:0.06em">May 2020</div>
@@ -1067,10 +1012,7 @@ body::after{
         <button class="tb-btn close-btn" onclick="minimizeWin('pub')">✕</button>
       </div>
     </div>
-    <div class="menu-bar">
-      <span class="menu-item">File</span>
-      <span class="menu-item">Cite</span>
-    </div>
+    <div class="menu-bar"><span class="menu-item">File</span><span class="menu-item">Cite</span></div>
     <div class="win-body">
       <h2>Publications</h2>
       <div class="pub-item">
@@ -1097,7 +1039,7 @@ body::after{
   <div class="window inactive minimized" id="win-contact" style="left:88px;top:16px;width:400px">
     <div class="pad-tl"></div><div class="pad-tr"></div><div class="pad-bl"></div><div class="pad-br"></div>
     <div class="title-bar" data-win="contact">
-      <span class="title-bar-icon">📡</span>
+      <span class="title-bar-icon">📬</span>
       <span class="title-bar-text">sys://contact/ping.sh</span>
       <div class="title-bar-controls">
         <button class="tb-btn" onclick="minimizeWin('contact')">─</button>
@@ -1107,36 +1049,29 @@ body::after{
     </div>
     <div class="win-body">
       <h2>Get In Touch</h2>
-      <div class="availability-badge">
-        <span class="status-led"></span> Available · June 2026
-      </div>
+      <div class="availability-badge"><span class="status-led"></span> Available · June 2026</div>
       <p style="font-family:var(--font-mono);font-size:0.77rem;color:var(--muted);margin-bottom:2px">
         // Seeking full-time RTL / VLSI design &amp; hardware verification roles.<br>
         // Open to interesting collaborations and research projects.
       </p>
       <div class="contact-win-links">
         <a class="contact-link-row" href="mailto:pujitha.2104@gmail.com">
-          <span class="contact-icon">📧</span>
-          <span class="contact-label">Email</span>
-          <span class="contact-val">pujitha.2104@gmail.com</span>
+          <span class="contact-icon">📧</span><span class="contact-label">Email</span><span class="contact-val">pujitha.2104@gmail.com</span>
         </a>
         <a class="contact-link-row" href="https://linkedin.com/in/pujitha05" target="_blank">
-          <span class="contact-icon">🔗</span>
-          <span class="contact-label">LinkedIn</span>
-          <span class="contact-val">linkedin.com/in/pujitha05</span>
+          <span class="contact-icon">🔗</span><span class="contact-label">LinkedIn</span><span class="contact-val">linkedin.com/in/pujitha05</span>
         </a>
         <a class="contact-link-row" href="https://github.com/brownie-crumble" target="_blank">
-          <span class="contact-icon">💻</span>
-          <span class="contact-label">GitHub</span>
-          <span class="contact-val">github.com/brownie-crumble</span>
+          <span class="contact-icon">💻</span><span class="contact-label">GitHub</span><span class="contact-val">github.com/brownie-crumble</span>
         </a>
         <div class="contact-link-row" style="cursor:default">
-          <span class="contact-icon">📍</span>
-          <span class="contact-label">Location</span>
-          <span class="contact-val">Bengaluru, Karnataka, India</span>
+          <span class="contact-icon">📍</span><span class="contact-label">Location</span><span class="contact-val">Bengaluru, Karnataka, India</span>
         </div>
       </div>
-      <button class="win98-btn" onclick="window.location='mailto:pujitha.2104@gmail.com'">▶ SEND_PING</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="win98-btn" onclick="window.location='mailto:pujitha.2104@gmail.com'">▶ SEND_PING</button>
+        <button class="win98-btn" onclick="downloadResume()">↓ RESUME</button>
+      </div>
     </div>
     <div class="status-bar"><div class="status-pane"><span class="status-led"></span>ONLINE · JUNE 2026</div></div>
   </div>
@@ -1145,9 +1080,7 @@ body::after{
 
 <!-- ══ TASKBAR ══ -->
 <div id="taskbar">
-  <button id="start-btn" onclick="toggleStart()">
-    <span>⊞</span> START
-  </button>
+  <button id="start-btn" onclick="toggleStart()"><span>⊞</span> START</button>
   <div class="taskbar-divider"></div>
   <div class="taskbar-apps" id="taskbar-apps"></div>
   <div class="taskbar-divider"></div>
@@ -1156,6 +1089,33 @@ body::after{
     <span id="clock">00:00</span>
   </div>
 </div>
+
+<!-- ══ MOBILE NAV ══ -->
+<nav id="mobile-nav">
+  <div class="mob-nav-inner">
+    <button class="mob-nav-btn active" id="mob-about" onclick="mobileNav('about',this)">
+      <span class="mob-nav-icon">🖥️</span><span class="mob-nav-label">About</span>
+    </button>
+    <button class="mob-nav-btn" id="mob-exp" onclick="mobileNav('exp',this)">
+      <span class="mob-nav-icon">⚡</span><span class="mob-nav-label">Exp</span>
+    </button>
+    <button class="mob-nav-btn" id="mob-projects" onclick="mobileNav('projects',this)">
+      <span class="mob-nav-icon">🔬</span><span class="mob-nav-label">Projects</span>
+    </button>
+    <button class="mob-nav-btn" id="mob-skills" onclick="mobileNav('skills',this)">
+      <span class="mob-nav-icon">🔧</span><span class="mob-nav-label">Skills</span>
+    </button>
+    <button class="mob-nav-btn" id="mob-edu" onclick="mobileNav('edu',this)">
+      <span class="mob-nav-icon">📡</span><span class="mob-nav-label">Edu</span>
+    </button>
+    <button class="mob-nav-btn" id="mob-pub" onclick="mobileNav('pub',this)">
+      <span class="mob-nav-icon">📎</span><span class="mob-nav-label">Papers</span>
+    </button>
+    <button class="mob-nav-btn" id="mob-contact" onclick="mobileNav('contact',this)">
+      <span class="mob-nav-icon">📬</span><span class="mob-nav-label">Contact</span>
+    </button>
+  </div>
+</nav>
 
 <!-- ══ START MENU ══ -->
 <div id="start-menu">
@@ -1167,8 +1127,9 @@ body::after{
     <div class="start-item" onclick="openWin('skills');closeStart()"><span class="si-icon">🔧</span> Skills</div>
     <div class="start-item" onclick="openWin('edu');closeStart()"><span class="si-icon">📡</span> Education</div>
     <div class="start-item" onclick="openWin('pub');closeStart()"><span class="si-icon">📎</span> Papers</div>
-    <div class="start-item" onclick="openWin('contact');closeStart()"><span class="si-icon">📡</span> Contact</div>
+    <div class="start-item" onclick="openWin('contact');closeStart()"><span class="si-icon">📬</span> Contact</div>
     <div class="start-divider"></div>
+    <div class="start-item" onclick="downloadResume();closeStart()"><span class="si-icon">↓</span> Download CV</div>
     <div class="start-item" onclick="showDialog();closeStart()"><span class="si-icon">ℹ️</span> Sys Info</div>
     <div class="start-divider"></div>
     <div class="start-item" onclick="triggerShutdown();closeStart()"><span class="si-icon">⏻</span> Shutdown</div>
@@ -1180,9 +1141,7 @@ body::after{
   <div class="title-bar">
     <span class="title-bar-icon">ℹ️</span>
     <span class="title-bar-text">sys://sysinfo</span>
-    <div class="title-bar-controls">
-      <button class="tb-btn close-btn" onclick="closeDialog()">✕</button>
-    </div>
+    <div class="title-bar-controls"><button class="tb-btn close-btn" onclick="closeDialog()">✕</button></div>
   </div>
   <div class="dialog-body">
     <div class="dialog-icon">💾</div>
@@ -1198,7 +1157,7 @@ body::after{
   </div>
   <div class="dialog-btns">
     <button class="win98-btn" onclick="closeDialog()">OK</button>
-    <button class="win98-btn" onclick="closeDialog()">CANCEL</button>
+    <button class="win98-btn" onclick="downloadResume();closeDialog()">↓ GET CV</button>
   </div>
 </div>
 
@@ -1208,20 +1167,66 @@ body::after{
 │   PCB-OS SHUTDOWN SEQUENCE  │
 └─────────────────────────────┘</div>
   <div id="shutdown-msg">FLUSHING REGISTERS...</div>
-  <div class="shutdown-bar-wrap">
-    <div class="shutdown-bar-fill" id="shutdown-bar"></div>
-  </div>
-  <div class="shutdown-sub" id="shutdown-sub">[ click to restart ]</div>
+  <div class="shutdown-bar-wrap"><div class="shutdown-bar-fill" id="shutdown-bar"></div></div>
+  <div class="shutdown-sub" id="shutdown-sub" style="display:none">[ click to restart ]</div>
 </div>
 
 <script>
-/* ════════════════════
+/* ══════════════════════
+   BOOT SEQUENCE
+══════════════════════ */
+(function(){
+  const bar = document.getElementById('boot-bar');
+  const boot = document.getElementById('boot');
+  setTimeout(()=>{ bar.style.width='100%'; },100);
+  setTimeout(()=>{
+    boot.classList.add('fade-out');
+    setTimeout(()=>{ boot.classList.add('hidden'); initWidgets(); },650);
+  },2000);
+})();
+
+/* ══════════════════════
+   MOUSE GLOW + COORDS
+══════════════════════ */
+const glow = document.getElementById('mouse-glow');
+const cx = document.getElementById('coord-x');
+const cy = document.getElementById('coord-y');
+document.addEventListener('mousemove', e=>{
+  glow.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%,-50%)`;
+  if(cx) { cx.textContent = String(e.clientX).padStart(4,'0'); cy.textContent = String(e.clientY).padStart(4,'0'); }
+},{passive:true});
+
+/* ══════════════════════
+   DESKTOP WIDGET
+══════════════════════ */
+function initWidgets(){
+  setTimeout(()=>{
+    const r = document.getElementById('wdg-rtl-bar');
+    const f = document.getElementById('wdg-fpga-bar');
+    const c = document.getElementById('wdg-coffee-bar');
+    if(r){ r.style.width='100%'; }
+    if(f){ f.style.width='82%'; }
+    if(c){ c.style.width='48%'; }
+  },400);
+  // Animate coffee level slowly
+  setInterval(()=>{
+    const c = document.getElementById('wdg-coffee-bar');
+    const v = document.getElementById('wdg-coffee');
+    if(!c) return;
+    const cur = parseFloat(c.style.width)||48;
+    const next = Math.max(10, Math.min(95, cur + (Math.random()-0.5)*8));
+    c.style.width = next.toFixed(0)+'%';
+    if(v) v.textContent = next.toFixed(0)+'%';
+  }, 5000);
+}
+
+/* ══════════════════════
    WINDOW MANAGER
-════════════════════ */
+══════════════════════ */
 let zTop = 100;
 const windows = ['about','exp','projects','skills','edu','pub','contact'];
 const winLabels = {about:'SYS://ABOUT',exp:'EXPERIENCE',projects:'PROJECTS',skills:'SKILLS',edu:'EDUCATION',pub:'PAPERS',contact:'CONTACT'};
-const winIcons  = {about:'🖥️',exp:'⚡',projects:'🔬',skills:'🔧',edu:'📡',pub:'📎',contact:'📡'};
+const winIcons  = {about:'🖥️',exp:'⚡',projects:'🔬',skills:'🔧',edu:'📡',pub:'📎',contact:'📬'};
 let minimized = {};
 windows.forEach(id => minimized[id] = id !== 'about');
 
@@ -1231,20 +1236,18 @@ function buildTaskbar(){
   tbApps.innerHTML='';
   windows.forEach(id=>{
     const btn = document.createElement('button');
-    btn.className = 'tb-app-btn' + (minimized[id] ? '' : ' active');
-    btn.id = 'tb-' + id;
-    btn.innerHTML = `<span>${winIcons[id]}</span>${winLabels[id]}`;
-    btn.onclick = () => toggleWin(id);
+    btn.className='tb-app-btn'+(minimized[id]?'':' active');
+    btn.id='tb-'+id;
+    btn.innerHTML=`<span>${winIcons[id]}</span>${winLabels[id]}`;
+    btn.onclick=()=>toggleWin(id);
     tbApps.appendChild(btn);
   });
 }
 
 function updateSidebarIcons(){
   windows.forEach(id=>{
-    const el = document.getElementById('dicon-' + id);
-    if(el){
-      el.classList.toggle('active-icon', !minimized[id]);
-    }
+    const el=document.getElementById('dicon-'+id);
+    if(el) el.classList.toggle('active-icon',!minimized[id]);
   });
 }
 
@@ -1253,166 +1256,306 @@ function focusWin(id){
     w.classList.remove('focused');
     w.classList.add('inactive');
   });
-  const el = document.getElementById('win-' + id);
+  const el=document.getElementById('win-'+id);
   if(el){
     el.classList.add('focused');
     el.classList.remove('inactive');
-    el.style.zIndex = ++zTop;
+    el.style.zIndex=++zTop;
   }
   buildTaskbar();
   updateSidebarIcons();
 }
 
 function openWin(id){
-  const el = document.getElementById('win-' + id);
+  const el=document.getElementById('win-'+id);
   if(!el) return;
-  const wasMin = minimized[id];
+  const wasMin=minimized[id];
   el.classList.remove('minimized');
-  minimized[id] = false;
+  minimized[id]=false;
   if(wasMin){
-    // Center the window when opened from sidebar
-    const vw = window.innerWidth;
-    const vh = window.innerHeight - 46;
-    const ww = parseInt(el.style.width) || 500;
-    const wh = el.offsetHeight || 400;
-    const nx = Math.max(88, Math.min(vw - ww - 10, (vw - ww) / 2));
-    const ny = Math.max(10, Math.min(vh - 80, (vh - wh) / 2));
-    el.style.left = nx + 'px';
-    el.style.top  = ny + 'px';
+    const vw=window.innerWidth;
+    const vh=window.innerHeight-46;
+    const ww=parseInt(el.style.width)||500;
+    const wh=el.offsetHeight||400;
+    const nx=Math.max(88,Math.min(vw-ww-10,(vw-ww)/2));
+    const ny=Math.max(10,Math.min(vh-80,(vh-wh)/2));
+    el.style.left=nx+'px';
+    el.style.top=ny+'px';
     el.classList.add('opening');
-    el.addEventListener('animationend', () => el.classList.remove('opening'), {once:true});
+    el.addEventListener('animationend',()=>el.classList.remove('opening'),{once:true});
   }
   focusWin(id);
 }
 
 function minimizeWin(id){
-  const el = document.getElementById('win-' + id);
+  const el=document.getElementById('win-'+id);
   if(!el) return;
-  el.classList.add('minimized');
-  minimized[id] = true;
-  buildTaskbar();
-  updateSidebarIcons();
+  el.style.transition='opacity 0.18s ease, transform 0.18s ease';
+  el.style.opacity='0';
+  el.style.transform='scale(0.97) translateY(4px)';
+  setTimeout(()=>{
+    el.classList.add('minimized');
+    el.style.opacity='';
+    el.style.transform='';
+    el.style.transition='';
+    minimized[id]=true;
+    buildTaskbar();
+    updateSidebarIcons();
+  },180);
 }
 
 function toggleWin(id){
   if(minimized[id]) openWin(id);
-  else {
-    const el = document.getElementById('win-' + id);
-    if(el && el.classList.contains('focused')) minimizeWin(id);
+  else{
+    const el=document.getElementById('win-'+id);
+    if(el&&el.classList.contains('focused')) minimizeWin(id);
     else focusWin(id);
   }
 }
 
-// Clicking a window focuses it
 document.querySelectorAll('.window').forEach(w=>{
-  const id = w.id.replace('win-','');
-  w.addEventListener('mousedown', () => focusWin(id), {passive:true});
+  const id=w.id.replace('win-','');
+  w.addEventListener('mousedown',()=>focusWin(id),{passive:true});
 });
 
-// Single-click on sidebar icons opens/focuses
-document.querySelectorAll('.d-icon[id]').forEach(icon=>{
-  const id = icon.id.replace('dicon-','');
-  icon.addEventListener('click', () => toggleWin(id));
-});
-
-/* ════════════════════
+/* ══════════════════════
    DRAG
-════════════════════ */
+══════════════════════ */
 function makeDraggable(win){
-  const bar = win.querySelector('.title-bar');
+  const bar=win.querySelector('.title-bar');
   if(!bar) return;
-  let dx=0, dy=0, drag=false;
+  let dx=0,dy=0,drag=false;
   function start(cx,cy){
     drag=true; dx=cx-win.offsetLeft; dy=cy-win.offsetTop;
     focusWin(win.id.replace('win-',''));
   }
   function move(cx,cy){
     if(!drag) return;
-    let nx = cx-dx, ny = cy-dy;
-    const dh = window.innerHeight - 46;
-    nx = Math.max(-200, Math.min(window.innerWidth-60, nx));
-    ny = Math.max(0, Math.min(dh-20, ny));
-    win.style.left = nx+'px';
-    win.style.top  = ny+'px';
+    let nx=cx-dx, ny=cy-dy;
+    const dh=window.innerHeight-46;
+    nx=Math.max(-200,Math.min(window.innerWidth-60,nx));
+    ny=Math.max(0,Math.min(dh-20,ny));
+    win.style.left=nx+'px';
+    win.style.top=ny+'px';
   }
-  bar.addEventListener('mousedown', e=>{
+  bar.addEventListener('mousedown',e=>{
     if(e.target.classList.contains('tb-btn')) return;
-    start(e.clientX, e.clientY); e.preventDefault();
+    start(e.clientX,e.clientY); e.preventDefault();
   });
-  bar.addEventListener('touchstart', e=>{
-    if(window.innerWidth<=700 || e.target.classList.contains('tb-btn')) return;
-    start(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault();
+  bar.addEventListener('touchstart',e=>{
+    if(window.innerWidth<=700||e.target.classList.contains('tb-btn')) return;
+    start(e.touches[0].clientX,e.touches[0].clientY); e.preventDefault();
   },{passive:false});
-  document.addEventListener('mousemove', e=>move(e.clientX, e.clientY), {passive:true});
-  document.addEventListener('touchmove', e=>move(e.touches[0].clientX, e.touches[0].clientY), {passive:true});
-  document.addEventListener('mouseup', ()=>drag=false, {passive:true});
-  document.addEventListener('touchend', ()=>drag=false, {passive:true});
+  document.addEventListener('mousemove',e=>move(e.clientX,e.clientY),{passive:true});
+  document.addEventListener('touchmove',e=>move(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
+  document.addEventListener('mouseup',()=>drag=false,{passive:true});
+  document.addEventListener('touchend',()=>drag=false,{passive:true});
 }
 document.querySelectorAll('.window').forEach(makeDraggable);
 
-/* ════════════════════
+/* ══════════════════════
+   MOBILE NAV
+══════════════════════ */
+let mobileActive = 'about';
+function mobileNav(id, btn){
+  if(window.innerWidth > 700) return;
+  // Show selected, hide others
+  windows.forEach(w=>{
+    const el=document.getElementById('win-'+w);
+    if(!el) return;
+    if(w===id){
+      el.classList.remove('minimized');
+    } else {
+      el.classList.add('minimized');
+    }
+  });
+  // Update button states
+  document.querySelectorAll('.mob-nav-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  mobileActive = id;
+  // Scroll to top
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Mobile init: show only about
+function initMobile(){
+  if(window.innerWidth <= 700){
+    windows.forEach(id=>{
+      const el=document.getElementById('win-'+id);
+      if(!el) return;
+      if(id==='about') el.classList.remove('minimized');
+      else el.classList.add('minimized');
+    });
+  }
+}
+window.addEventListener('resize', ()=>{
+  if(window.innerWidth<=700) initMobile();
+});
+initMobile();
+
+/* ══════════════════════
    START MENU
-════════════════════ */
-let startOpen = false;
+══════════════════════ */
+let startOpen=false;
 function toggleStart(){
-  startOpen = !startOpen;
-  document.getElementById('start-menu').classList.toggle('open', startOpen);
-  document.getElementById('start-btn').classList.toggle('active', startOpen);
+  startOpen=!startOpen;
+  const sm=document.getElementById('start-menu');
+  const sb=document.getElementById('start-btn');
+  if(startOpen){
+    sm.style.display='flex';
+    requestAnimationFrame(()=>{
+      sm.classList.add('open');
+    });
+  } else {
+    sm.classList.remove('open');
+    setTimeout(()=>{ if(!startOpen) sm.style.display='none'; },200);
+  }
+  sb.classList.toggle('active',startOpen);
 }
 function closeStart(){
-  startOpen = false;
-  document.getElementById('start-menu').classList.remove('open');
+  startOpen=false;
+  const sm=document.getElementById('start-menu');
+  sm.classList.remove('open');
+  setTimeout(()=>{ sm.style.display='none'; },200);
   document.getElementById('start-btn').classList.remove('active');
 }
-document.getElementById('desktop').addEventListener('mousedown', e=>{
-  if(!e.target.closest('#start-menu') && !e.target.closest('#start-btn')){
-    closeStart();
-  }
+document.getElementById('desktop').addEventListener('mousedown',e=>{
+  if(!e.target.closest('#start-menu')&&!e.target.closest('#start-btn')) closeStart();
 },{passive:true});
 
-/* ════════════════════
+/* ══════════════════════
    DIALOG
-════════════════════ */
+══════════════════════ */
 function showDialog(){ document.getElementById('dialog').style.display='block'; }
 function closeDialog(){ document.getElementById('dialog').style.display='none'; }
 
-/* ════════════════════
+/* ══════════════════════
+   DOWNLOAD RESUME
+══════════════════════ */
+function downloadResume(){
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pujitha Padmanabha — Resume</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Share Tech Mono',monospace;background:#fff;color:#111;padding:36px 48px;max-width:860px;margin:0 auto;font-size:11px;}
+  h1{font-family:'Orbitron',sans-serif;font-size:22px;letter-spacing:0.06em;text-transform:uppercase;border-bottom:2px solid #00b894;padding-bottom:8px;margin-bottom:4px;}
+  .sub{color:#555;font-size:10px;letter-spacing:0.08em;margin-bottom:16px;}
+  h2{font-size:10px;text-transform:uppercase;letter-spacing:0.18em;color:#00b894;margin:18px 0 8px;border-bottom:1px solid #ddd;padding-bottom:3px;}
+  .row{display:flex;justify-content:space-between;margin-bottom:8px;}
+  .co{font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:#00b894;}
+  .date{color:#888;font-size:9px;}
+  .desc{color:#444;line-height:1.7;margin-top:3px;}
+  .skills{display:flex;flex-wrap:wrap;gap:5px;}
+  .tag{background:#f0f0f0;padding:2px 10px;border:1px solid #ddd;font-size:9px;text-transform:uppercase;}
+  .contact{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px;font-size:10px;color:#444;}
+  strong{color:#00b894;}
+  .edu-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #eee;}
+  .edu-score{font-family:'Orbitron',sans-serif;font-size:18px;color:#00b894;font-weight:700;}
+</style>
+</head>
+<body>
+<h1>Pujitha Padmanabha</h1>
+<div class="sub">VLSI · RTL Design · Hardware Engineering · Bengaluru, India</div>
+<div class="contact">
+  <span>📧 pujitha.2104@gmail.com</span>
+  <span>🔗 linkedin.com/in/pujitha05</span>
+  <span>💻 github.com/brownie-crumble</span>
+  <span>📍 Bengaluru, Karnataka, India</span>
+</div>
+
+<h2>Education</h2>
+<div class="edu-row"><div><strong>B.E. Electronics &amp; Communication Engineering</strong><br><span class="co">BNM Institute of Technology, Bengaluru</span></div><div style="text-align:right"><div class="edu-score">9.8</div><div class="date">Jun 2026 (Expected)</div></div></div>
+<div class="edu-row"><div><strong>Pre-University (PCMC)</strong><br><span class="co">SKCH PU College</span></div><div style="text-align:right"><div class="edu-score">97%</div><div class="date">May 2022</div></div></div>
+<div class="edu-row"><div><strong>CBSE Class X</strong><br><span class="co">Sri Jnanakshi Vidyaniketan</span></div><div style="text-align:right"><div class="edu-score">96%</div><div class="date">May 2020</div></div></div>
+
+<h2>Experience</h2>
+<div style="margin-bottom:10px"><div class="row"><div><div class="co">Frauscher Sensor Technology</div><strong>Application Engineering Intern</strong></div><span class="date">Nov '25 – May '26</span></div><p class="desc">Hardware testing &amp; signal analysis for railway sensor systems. PCB circuit analysis, system configuration, performance validation, and optimized diagnostic testing sequences.</p></div>
+<div style="margin-bottom:10px"><div class="row"><div><div class="co">IEEE Circuits and Systems Society</div><strong>Engineering Intern</strong></div><span class="date">Oct – Dec '25</span></div><p class="desc">Implemented iterative ChaCha20 cryptographic core (8/12/20 rounds) in Xilinx Vivado on FPGA. Achieved up to <strong>4.27 Gbps</strong> throughput.</p></div>
+<div style="margin-bottom:10px"><div class="row"><div><div class="co">ABB India Limited</div><strong>Student Intern</strong></div><span class="date">Jul – Oct '25</span></div><p class="desc">Industrial drive systems (VFDs), fault analysis, power electronics troubleshooting. Built a digital fault tracking system to streamline maintenance workflows.</p></div>
+<div style="margin-bottom:10px"><div class="row"><div><div class="co">Robomanthan Pvt Ltd</div><strong>Robotics Intern</strong></div><span class="date">Aug – Sep '24</span></div><p class="desc">ESP32 &amp; Arduino robotic systems — gesture lighting, Bluetooth bots, OpenCV color tracking, Python Roomba simulation.</p></div>
+<div style="margin-bottom:10px"><div class="row"><div><div class="co">Samsung Innovation Campus</div><strong>Student Trainee</strong></div><span class="date">Oct – Dec '23</span></div><p class="desc">Python-based ML pipeline on Kaggle datasets to detect fraudulent job postings.</p></div>
+
+<h2>Projects</h2>
+<div style="margin-bottom:8px"><strong>ASIC-Oriented RTL Implementation of ASCON-128</strong><br><p class="desc">Verilog implementation comparing serial and unrolled architectures with mixed-cycle PPA optimization and FPGA validation. Published in IJSEI.</p></div>
+<div style="margin-bottom:8px"><strong>MSHR-Based Non-Blocking Cache Verification</strong><br><p class="desc">2-way set associative non-blocking cache with 4-entry coalescing MSHRs, verified using a self-checking Verilog testbench.</p></div>
+<div style="margin-bottom:8px"><strong>Network Traffic Anomaly Detection</strong><br><p class="desc">MATLAB-based ML to detect DDoS, MITM, and SQL injection patterns with 90% accuracy.</p></div>
+<div style="margin-bottom:8px"><strong>Music Reactive Lights using IoT</strong><br><p class="desc">Arduino lighting system reacting to audio signals in real time with customizable effects.</p></div>
+
+<h2>Publications</h2>
+<div style="margin-bottom:6px"><span class="co">IEEE IITCEE 2025 |</span> Quantum Dots in Modern Medicine: Advancing Imaging, Diagnostics, and Drug Delivery</div>
+<div style="margin-bottom:6px"><span class="co">IJSEI |</span> ASIC-Oriented RTL Implementation of ASCON-128</div>
+
+<h2>Skills</h2>
+<div style="margin-bottom:6px;color:#555;font-size:9px">HDL &amp; Programming</div>
+<div class="skills" style="margin-bottom:10px">
+  <span class="tag">Verilog</span><span class="tag">Python</span><span class="tag">MATLAB</span><span class="tag">C</span>
+</div>
+<div style="margin-bottom:6px;color:#555;font-size:9px">EDA &amp; Hardware</div>
+<div class="skills" style="margin-bottom:10px">
+  <span class="tag">Cadence Genus</span><span class="tag">Cadence Virtuoso</span><span class="tag">Xilinx Vivado</span><span class="tag">STM32CubeIDE</span><span class="tag">PSpice</span><span class="tag">Arduino IDE</span>
+</div>
+<div style="margin-bottom:6px;color:#555;font-size:9px">Core Domains</div>
+<div class="skills" style="margin-bottom:10px">
+  <span class="tag">RTL Design</span><span class="tag">Digital Design</span><span class="tag">Computer Architecture</span><span class="tag">Verilog Verification</span><span class="tag">CMOS Fundamentals</span><span class="tag">Secure HW Design</span>
+</div>
+<div style="margin-bottom:6px;color:#555;font-size:9px">Certifications</div>
+<div class="skills">
+  <span class="tag">NPTEL VLSI Design</span><span class="tag">NPTEL DFT</span><span class="tag">Cisco Networking</span><span class="tag">Samsung Python ML</span>
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Pujitha_Padmanabha_Resume.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ══════════════════════
    SHUTDOWN
-════════════════════ */
-const shutMsgs = ['FLUSHING REGISTERS...','HALTING CLOCK DOMAINS...','POWER GATING LOGIC BLOCKS...','DRAINING OUTPUT BUFFERS...','ALL SYSTEMS OFFLINE.'];
+══════════════════════ */
+const shutMsgs=['FLUSHING REGISTERS...','HALTING CLOCK DOMAINS...','POWER GATING LOGIC BLOCKS...','DRAINING OUTPUT BUFFERS...','ALL SYSTEMS OFFLINE.'];
 function triggerShutdown(){
-  const overlay = document.getElementById('shutdown-overlay');
-  const bar     = document.getElementById('shutdown-bar');
-  const msg     = document.getElementById('shutdown-msg');
-  const sub     = document.getElementById('shutdown-sub');
+  const overlay=document.getElementById('shutdown-overlay');
+  const bar=document.getElementById('shutdown-bar');
+  const msg=document.getElementById('shutdown-msg');
+  const sub=document.getElementById('shutdown-sub');
   overlay.classList.add('active');
-  sub.style.display = 'none';
-  let i = 0;
-  msg.textContent = shutMsgs[0];
-  const interval = setInterval(()=>{
+  sub.style.display='none';
+  let i=0; msg.textContent=shutMsgs[0];
+  const interval=setInterval(()=>{
     i++;
-    if(i < shutMsgs.length) msg.textContent = shutMsgs[i];
-    if(i >= shutMsgs.length-1){ clearInterval(interval); sub.style.display='block'; }
-  }, 600);
-  setTimeout(()=>{ bar.style.width='100%'; }, 80);
-  overlay.addEventListener('click', ()=>{
+    if(i<shutMsgs.length) msg.textContent=shutMsgs[i];
+    if(i>=shutMsgs.length-1){ clearInterval(interval); sub.style.display='block'; }
+  },600);
+  setTimeout(()=>{ bar.style.width='100%'; },80);
+  overlay.addEventListener('click',()=>{
     overlay.classList.remove('active');
     bar.style.transition='none'; bar.style.width='0';
-    setTimeout(()=>{ bar.style.transition='width 3s linear'; }, 60);
+    setTimeout(()=>{ bar.style.transition='width 3s linear'; },60);
     clearInterval(interval);
-    sub.style.display = 'none';
+    sub.style.display='none';
   },{once:true});
 }
 
-/* ════════════════════
+/* ══════════════════════
    CLOCK
-════════════════════ */
+══════════════════════ */
 function tick(){
-  const now = new Date();
-  let h = now.getHours(), m = now.getMinutes();
-  document.getElementById('clock').textContent = (h<10?'0'+h:h)+':'+(m<10?'0'+m:m);
+  const n=new Date();
+  let h=n.getHours(),m=n.getMinutes();
+  document.getElementById('clock').textContent=(h<10?'0'+h:h)+':'+(m<10?'0'+m:m);
 }
-tick(); setInterval(tick, 10000);
+tick(); setInterval(tick,10000);
 
 /* Init */
 buildTaskbar();
