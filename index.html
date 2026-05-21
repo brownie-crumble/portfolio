@@ -587,28 +587,7 @@ body::after{
     </svg>
   </div>
 
-  <!-- Desktop System Monitor Widget -->
-  <div class="desktop-widget" id="widget-sysmon">
-    <div class="wdg-title">PUJITHA.EXE STATUS</div>
-    <div class="wdg-row"><span class="wdg-label">Caffeine</span><span class="wdg-val orange" id="wdg-caff">—</span></div>
-    <div class="wdg-bar"><div class="wdg-fill orange" id="wdg-caff-bar" style="width:0%"></div></div>
-    <div style="height:5px"></div>
-    <div class="wdg-row"><span class="wdg-label">Vibe Check</span><span class="wdg-val" id="wdg-vibe">—</span></div>
-    <div class="wdg-bar"><div class="wdg-fill" id="wdg-vibe-bar" style="width:0%"></div></div>
-    <div style="height:5px"></div>
-    <div class="wdg-row"><span class="wdg-label">Stack Overflow</span><span class="wdg-val blue" id="wdg-so">—</span></div>
-    <div class="wdg-bar"><div class="wdg-fill blue" id="wdg-so-bar" style="width:0%"></div></div>
-    <div style="height:5px"></div>
-    <div class="wdg-row"><span class="wdg-label">Setup Violation</span><span class="wdg-val" style="color:var(--red)" id="wdg-setup">—</span></div>
-    <div class="wdg-bar"><div class="wdg-fill" style="background:var(--red)" id="wdg-setup-bar" style="width:0%"></div></div>
-    <div style="height:5px;border-top:1px solid var(--dim);margin-top:4px;padding-top:4px"></div>
-    <div class="wdg-row" style="margin:0"><span class="wdg-label">Mood</span><span class="wdg-val orange" id="wdg-mood" style="font-size:6.5px;animation:blink 1.5s ease-in-out infinite">—</span></div>
-  </div>
-
-  <div class="desktop-widget" id="widget-coords" style="pointer-events:none;">
-    X:<span id="coord-x">----</span>&nbsp;Y:<span id="coord-y">----</span>
-  </div>
-
+ 
   <!-- Left Desktop Icons -->
   <div class="desktop-icons" id="sidebar-icons">
     <div class="d-icon" id="dicon-about" onclick="toggleWin('about')">
@@ -1110,31 +1089,6 @@ document.addEventListener('mousemove',e=>{
   if(cx){cx.textContent=String(e.clientX).padStart(4,'0');cy.textContent=String(e.clientY).padStart(4,'0');}
 },{passive:true});
 
-/* ══ GOOFY WIDGET ══ */
-function initWidgets(){
-  const vibes=[["IMMACULATE",92],["SENDING IT",85],["IN THE ZONE",78],["CAFFEINATED",65],["NOMINAL",50]];
-  const sos=[["FREQUENT",88],["AS NEEDED",55],["TOO PROUD",12],["CTRL+C LIFE",99]];
-  const setups=[["PRAY & PLACE",80],["YOLO MODE",95],["TIGHT THO",40],["WTF IS STA",70]];
-  const caffs=[["OPTIMAL",95],["ADEQUATE",70],["CRITICAL",30],["EMERGENCY",8],["OVERDOSED",100]];
-  const moods=["DEBUGGING AT 2AM","TIMING IS TIGHT","ONE MORE SYNTH RUN","VIVADO CRASHED","JUST PUSHED TO MAIN","RTL OR RITALIN?"];
-  function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
-  function updateWidget(){
-    const [cv,cp]=pick(caffs);
-    const [vv,vp]=pick(vibes);
-    const [sv,sp]=pick(sos);
-    const [tv,tp]=pick(setups);
-    const mv=pick(moods);
-    const el=id=>document.getElementById(id);
-    if(!el('wdg-caff'))return;
-    el('wdg-caff').textContent=cv; el('wdg-caff-bar').style.width=cp+'%';
-    el('wdg-vibe').textContent=vv; el('wdg-vibe-bar').style.width=vp+'%';
-    el('wdg-so').textContent=sv; el('wdg-so-bar').style.width=sp+'%';
-    el('wdg-setup').textContent=tv; el('wdg-setup-bar').style.width=tp+'%';
-    el('wdg-mood').textContent=mv;
-  }
-  setTimeout(updateWidget,400);
-  setInterval(updateWidget,6000);
-}
 
 /* ══ WINDOW MANAGER ══ */
 let zTop=100;
